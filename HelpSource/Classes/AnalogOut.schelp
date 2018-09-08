@@ -1,0 +1,55 @@
+class:: AnalogOut
+summary:: Write data to an analog output of the BELA board
+related:: Classes/AnalogIn, Classes/DigitalIn, Classes/DigitalOut, Classes/DigitalIO
+categories::  UGens>BELA
+
+
+Description::
+
+Writes analog data to an analog output of the BELA board.
+
+note::
+This UGen only works on BeLa
+::
+
+classmethods::
+
+method::ar
+
+argument::analogPin
+
+Analog pin number to read. Pin numbers begin at 0. This value can be modulated at audiorate.
+
+argument::output
+
+Value to write out to the pin.
+
+argument::mul
+
+argument::add
+
+method::kr
+
+argument::analogPin
+
+Analog pin number to read. Pin numbers begin at 0.
+
+argument::output
+
+Value to write out to the pin.
+
+argument::mul
+
+argument::add
+
+Examples::
+
+code::
+// write a sine oscillator's output to a pin
+
+(
+SynthDef("help-AnalogOut",{ arg out=0;
+    AnalogOut.ar( 0 , SinOsc.ar( 10 ) );
+}).play;
+)
+::

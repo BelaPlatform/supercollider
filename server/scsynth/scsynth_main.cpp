@@ -87,6 +87,20 @@ void Usage() {
              "   -I <input-streams-enabled>\n"
              "   -O <output-streams-enabled>\n"
 #endif
+#ifdef BELA
+             "   -J <bela-analog-input-channels>\n"
+             "   -K <bela-analog-output-channels>\n"
+             "   -G <bela-digital-channels>\n"
+             "   -Q <bela-headphone-level> (0dB max, -63.5dB min)\n"
+             "   -X <bela-pga-gain-left>\n"
+             "   -Y <bela-pga-gain-right>\n"
+             "   -A <bela-speaker-mute>\n"
+             "   -x <bela-dac-level>\n"
+             "   -y <bela-adc-level>\n"
+             "   -g <bela-multiplexer-channels>\n"
+             "   -T <bela-pru-id>\n"
+             "   -E <bela-oscilloscope-max-channels>\n"
+#endif // BELA
 #if (_POSIX_MEMLOCK - 0) >= 200112L
              "   -L enable memory locking\n"
 #endif
@@ -147,9 +161,30 @@ int scsynth_main(int argc, char** argv) {
 
     WorldOptions options;
 
+#ifdef BELA
+    // defaults
+    options.mBelaAnalogInputChannels = 0;
+    options.mBelaAnalogOutputChannels = 0;
+    options.mBelaDigitalChannels = 0;
+    options.mBelaHeadphoneLevel = -6.;
+    options.mBelaPGAGainLeft = 20;
+    options.mBelaPGAGainRight = 20;
+    options.mBelaSpeakerMuted = 0;
+    options.mBelaADCLevel = 0;
+    options.mBelaDACLevel = 0;
+    options.mBelaNumMuxChannels = 0;
+    options.mBelaPRU = 1;
+    options.mBelaMaxScopeChannels = 0;
+#endif // BELA
+
     for (int i = 1; i < argc;) {
+#if defined(BELA)
+#    define SC_EXTRA_OPTIONS "JKGQXYAxygTE"
+#else // BELA
+#    define SC_EXTRA_OPTIONS ""
+#endif // BELA
         if (argv[i][0] != '-' || argv[i][1] == 0
-            || strchr("utBaioczblndpmwZrCNSDIOsMHvVRUhPL", argv[i][1]) == nullptr) {
+            || strchr("utBaioczblndpmwZrCNSDIOsMHvVRUhPL" SC_EXTRA_OPTIONS, argv[i][1]) == nullptr) {
             scprintf("ERROR: Invalid option %s\n", argv[i]);
             Usage();
         }
@@ -280,6 +315,56 @@ int scsynth_main(int argc, char** argv) {
             options.mMemoryLocking = false;
 #endif
             break;
+#ifdef BELA
+        case 'J':
+            checkNumArgs(2);
+            options.mBelaAnalogInputChannels = atoi(argv[j + 1]);
+            break;
+        case 'K':
+            checkNumArgs(2);
+            options.mBelaAnalogOutputChannels = atoi(argv[j + 1]);
+            break;
+        case 'G':
+            checkNumArgs(2);
+            options.mBelaDigitalChannels = atoi(argv[j + 1]);
+            break;
+        case 'Q':
+            checkNumArgs(2);
+            options.mBelaHeadphoneLevel = atof(argv[j + 1]);
+            break;
+        case 'X':
+            checkNumArgs(2);
+            options.mBelaPGAGainLeft = atof(argv[j + 1]);
+            break;
+        case 'Y':
+            checkNumArgs(2);
+            options.mBelaPGAGainRight = atof(argv[j + 1]);
+            break;
+        case 'A':
+            checkNumArgs(2);
+            options.mBelaSpeakerMuted = atoi(argv[j + 1]) > 0;
+            break;
+        case 'x':
+            checkNumArgs(2);
+            options.mBelaDACLevel = atof(argv[j + 1]);
+            break;
+        case 'y':
+            checkNumArgs(2);
+            options.mBelaADCLevel = atof(argv[j + 1]);
+            break;
+        case 'g':
+            checkNumArgs(2);
+            options.mBelaNumMuxChannels = atoi(argv[j + 1]);
+            break;
+        case 'T':
+            checkNumArgs(2);
+            options.mBelaPRU = atoi(argv[j + 1]);
+            break;
+        case 'E':
+            checkNumArgs(2);
+            options.mBelaMaxScopeChannels = atoi(argv[j + 1]);
+            break;
+#endif // BELA
         case 'V':
             checkNumArgs(2);
             options.mVerbosity = atoi(argv[j + 1]);
