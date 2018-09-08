@@ -359,6 +359,9 @@ void SC_AudioDriver::RunThread() {
     while (mRunThreadFlag) {
         // wait for sync
         mAudioSync.WaitNext();
+#ifdef BELA
+        rt_print_flush_buffers();
+#endif /* BELA */
 
         reinterpret_cast<SC_Lock*>(mWorld->mNRTLock)->lock();
 
@@ -661,7 +664,7 @@ bool SC_CoreAudioDriver::DriverSetup(int* outNumSamplesPerCallback, double* outS
             count = sizeof(mOutputDevice);
             // get the output device:
             //			err = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, &count, (void *) &
-            // mOutputDevice);
+            //mOutputDevice);
 
             propertyAddress.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
 
@@ -678,7 +681,7 @@ bool SC_CoreAudioDriver::DriverSetup(int* outNumSamplesPerCallback, double* outS
         if (mInputDevice == kAudioDeviceUnknown) {
             count = sizeof(mInputDevice);
             //			err = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultInputDevice, &count, (void *) &
-            // mInputDevice);
+            //mInputDevice);
 
             propertyAddress.mSelector = kAudioHardwarePropertyDefaultInputDevice;
 
@@ -1624,16 +1627,16 @@ bool SC_CoreAudioDriver::DriverStart() {
 
     try {
         if (UseSeparateIO()) {
-            //		err = AudioDeviceAddIOProc(mOutputDevice, appIOProc, (void *) this);	// setup Out device with an
-            // IO proc
+            //		err = AudioDeviceAddIOProc(mOutputDevice, appIOProc, (void *) this);	// setup Out device with an IO
+            //proc
 
             err = AudioDeviceCreateIOProcID(mOutputDevice, appIOProcFunc, (void*)this, &mOutputID);
             if (err != kAudioHardwareNoError) {
                 scprintf("AudioDeviceAddIOProc failed %s %d\n", &err, (int)err);
                 return false;
             }
-            //		err = AudioDeviceAddIOProc(mInputDevice, appIOProcSeparateIn, (void *) this);		// setup In
-            // device with an IO proc
+            //		err = AudioDeviceAddIOProc(mInputDevice, appIOProcSeparateIn, (void *) this);		// setup In device
+            //with an IO proc
             err = AudioDeviceCreateIOProcID(mInputDevice, appIOProcSeparateIn, (void*)this, &mInputID);
 
             if (err != kAudioHardwareNoError) {
@@ -1772,8 +1775,8 @@ bool SC_CoreAudioDriver::DriverStart() {
     AudioObjectSetPropertyData(kAudioObjectSystemObject, &theAddress, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
 
     // for now no spotting of hardware changes, assumption is that ServerOptions inviolate. However, if a device was
-    // unplugged, could react to loss of that device by switching to system default? note that the number of listeners
-    // is stripped down to only one for now, to react to headphone swaps in the case of Built-in Output
+    // unplugged, could react to loss of that device by switching to system default? note that the number of listeners is
+    // stripped down to only one for now, to react to headphone swaps in the case of Built-in Output
     AddDeviceListeners(mOutputDevice, this);
 
     return true;

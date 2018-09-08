@@ -58,6 +58,19 @@ ServerOptions {
 
 	var <>safetyClipThreshold;
 
+	// extension for BELA
+	var <>numAnalogInChannels;
+	var <>numAnalogOutChannels;
+	var <>numDigitalChannels;
+	var <>headphoneLevel;
+	var <>pgaGainLeft;
+	var <>pgaGainRight;
+	var <>speakerMuted;
+	var <>dacLevel;
+	var <>adcLevel;
+	var <>numMultiplexChannels;
+	var <>belaPRU;
+
 	*initClass {
 		defaultValues = IdentityDictionary.newFrom(
 			(
@@ -101,6 +114,17 @@ ServerOptions {
 				recBufSize: nil,
 				bindAddress: "127.0.0.1",
 				safetyClipThreshold: 1.26 // ca. 2 dB
+				numAnalogInChannels: 2,
+				numAnalogOutChannels: 2,
+				numDigitalChannels: 16,
+				headphoneLevel: -6,
+				pgaGainLeft: 10,
+				pgaGainRight: 10,
+				speakerMuted: 0,
+				dacLevel: 0,
+				adcLevel: 0,
+				numMultiplexChannels: 0,
+				belaPRU: 1,
 			)
 		)
 	}
@@ -229,6 +253,40 @@ ServerOptions {
 		});
 		if (thisProcess.platform.name === \osx && Server.program.asString.endsWith("supernova").not && safetyClipThreshold.notNil, {
 			o = o ++ " -s " ++ safetyClipThreshold;
+
+		// additions for BELA
+		if (numAnalogInChannels.notNil, {
+			o = o ++ " -J " ++ numAnalogInChannels;
+		});
+		if (numAnalogOutChannels.notNil, {
+			o = o ++ " -K " ++ numAnalogOutChannels;
+		});
+		if (numDigitalChannels.notNil, {
+			o = o ++ " -G " ++ numDigitalChannels;
+		});
+		if (headphoneLevel.notNil, {
+			o = o ++ " -Q " ++ headphoneLevel;
+		});
+		if (pgaGainLeft.notNil, {
+			o = o ++ " -X " ++ pgaGainLeft;
+		});
+		if (pgaGainRight.notNil, {
+			o = o ++ " -Y " ++ pgaGainRight;
+		});
+		if (speakerMuted.notNil, {
+			o = o ++ " -s " ++ speakerMuted;
+		});
+		if (dacLevel.notNil, {
+			o = o ++ " -x " ++ dacLevel;
+		});
+		if (adcLevel.notNil, {
+			o = o ++ " -y " ++ adcLevel;
+		});
+		if (numMultiplexChannels.notNil, {
+			o = o ++ " -g " ++ numMultiplexChannels;
+		});
+		if (belaPRU.notNil, {
+			o = o ++ " -T " ++ belaPRU;
 		});
 		^o
 	}
