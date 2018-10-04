@@ -313,6 +313,17 @@ void SC_BelaDriver::staticMAudioSyncSignal(void*) {
 }
 // ====================================================================
 
+typedef struct _BelaHwConfig // HW_DETECT_HACK
+{
+    float audioSampleRate;
+    unsigned int audioInChannels;
+    unsigned int audioOutChannels;
+    unsigned int analogInChannels;
+    unsigned int analogOutChannels;
+    void* activeCodec;
+    void* disabledCodec;
+} BelaHwConfig;
+int Bela_getHwConfig(BelaHw hw, BelaHwConfig* cfg); // HW_DETECT_HACK
 bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     BelaInitSettings* settings = Bela_InitSettings_alloc();
     Bela_defaultSettings(settings);
@@ -406,13 +417,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // enable the audio expander capelet for the first few "analog as audio" channels
     // inputs and ...
     for (int n = 0; n < extraAudioIn; ++n) {
-        printf("Using analog in %d as audio in %d\n", n, n + settings->numAudioInChannels);
+        printf("Using analog in %d as audio in %d\n", n, n + cfg.audioInChannels);
         settings->audioExpanderInputs |= (1 << n);
     }
 
     // ... outputs
     for (int n = 0; n < extraAudioOut; ++n) {
-        printf("Using analog out %d as audio out %d\n", n, n + settings->numAudioOutChannels);
+        printf("Using analog out %d as audio out %d\n", n, n + cfg.audioOutChannels);
         settings->audioExpanderOutputs |= (1 << n);
     }
 
