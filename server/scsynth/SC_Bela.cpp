@@ -313,6 +313,17 @@ void SC_BelaDriver::staticMAudioSyncSignal(void*) {
 }
 // ====================================================================
 
+typedef struct _BelaHwConfig // HW_DETECT_HACK
+{
+    float audioSampleRate;
+    unsigned int audioInChannels;
+    unsigned int audioOutChannels;
+    unsigned int analogInChannels;
+    unsigned int analogOutChannels;
+    void* activeCodec;
+    void* disabledCodec;
+} BelaHwConfig;
+int Bela_getHwConfig(BelaHw hw, BelaHwConfig* cfg); // HW_DETECT_HACK
 bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     BelaInitSettings* settings = Bela_InitSettings_alloc();
     Bela_defaultSettings(settings);
@@ -347,8 +358,21 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     int numAnalogIn = mWorld->mBelaAnalogInputChannels;
     int numAnalogOut = mWorld->mBelaAnalogOutputChannels;
 
-    int extraAudioIn = mWorld->mNumInputs - settings->numAudioInChannels;
-    int extraAudioOut = mWorld->mNumOutputs - settings->numAudioOutChannels;
+    // HW_DETECT_HACK: Here is the deal: we need to know:
+    // - how many real audio channels are available
+    // - how many audio channels the user wants
+    // - how many analog channels are available
+    // before we can request Bela for:
+    // - a given number of analog channels
+    // - applying the audio expander capelet on these channels
+    // Currently (as of 1.4.0) the Bela API does not allow to
+    // know the number of audio channels available.
+
+    BelaHwConfig cfg;
+    Bela_getHwConfig(Bela_detectHw(), &cfg);
+    printf("mNumInputs :%d\n", mWorld->mNumInputs);
+    int extraAudioIn = mWorld->mNumInputs - cfg.audioInChannels;
+    int extraAudioOut = mWorld->mNumOutputs - cfg.audioOutChannels;
     // if we need more audio channels than there actually are audio
     // channels, make sure we have some extra analogs
     if (extraAudioIn > 0) {
@@ -394,13 +418,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // enable the audio expander capelet for the first few "analog as audio" channels
     // inputs and ...
     for (int n = 0; n < extraAudioIn; ++n) {
-        printf("Using analog in %d as audio in %d\n", n, n + settings->numAudioInChannels);
+        printf("Using analog in %d as audio in %d\n", n, n + cfg.audioInChannels);
         settings->audioExpanderInputs |= (1 << n);
     }
 
     // ... outputs
     for (int n = 0; n < extraAudioOut; ++n) {
-        printf("Using analog out %d as audio out %d\n", n, n + settings->numAudioOutChannels);
+        printf("Using analog out %d as audio out %d\n", n, n + cfg.audioOutChannels);
         settings->audioExpanderOutputs |= (1 << n);
     }
 
