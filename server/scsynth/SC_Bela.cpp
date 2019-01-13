@@ -370,7 +370,6 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
 
     BelaHwConfig cfg;
     Bela_getHwConfig(Bela_detectHw(), &cfg);
-    printf("mNumInputs :%d\n", mWorld->mNumInputs);
     int extraAudioIn = mWorld->mNumInputs - cfg.audioInChannels;
     int extraAudioOut = mWorld->mNumOutputs - cfg.audioOutChannels;
     // if we need more audio channels than there actually are audio
@@ -408,8 +407,8 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
         numAnalogIn = numAnalogOut;
         printf("Number of analog input channels must match number of analog outputs. Using %u for both\n", numAnalogIn);
     }
-    settings->numAnalogInChannels = numAnalogOut;
-    settings->numAnalogOutChannels = numAnalogIn;
+    settings->numAnalogInChannels = numAnalogIn;
+    settings->numAnalogOutChannels = numAnalogOut;
 
     if (settings->numAnalogInChannels > 0 || settings->numAnalogOutChannels > 0) {
         settings->useAnalog = 1;
