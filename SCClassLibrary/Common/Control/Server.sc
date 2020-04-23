@@ -119,7 +119,8 @@ ServerOptions {
 				pgaGainRight: 20.0,
 				speakerMuted: false,
 				dacLevel: 0.0,
-				adclevel: 0.0
+				adclevel: 0.0,
+                belaPRU: 0
 			)
 		)
 	}
