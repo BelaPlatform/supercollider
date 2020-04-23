@@ -8,7 +8,7 @@ const init = () => {
             { regex: /^\b\d+r[0-9a-zA-Z]*(\.[0-9A-Z]*)?/, token: 'number radix-float' },
             { regex: /^\b\d+(s+|b+|[sb]\d+)\b/, token: 'number scale-degree' },
             { regex: /^\b((\d+(\.\d+)?([eE][-+]?\d+)?(pi)?)|pi)\b/, token: 'number float' },
-            { regex: /^\b0(x|X)(\d|[a-f]|[A-F])+/, token: 'number hex-int' },
+            { regex: /^\b0x(\d|[a-f]|[A-F])+/, token: 'number hex-int' },
             { regex: /^\b[A-Za-z_]\w*\:/, token: 'symbol symbol-arg' },
             { regex: /^[a-z]\w*/, token: 'text name' },
             { regex: /^\b[A-Z]\w*/, token: 'class' },
@@ -60,6 +60,10 @@ const init = () => {
 }
 
 const evalLine = () => {
+    // If we are not running in the SC IDE, do nothing.
+    if (!window.IDE) {
+        return;
+    }
     // Ask IDE to eval line. Calls back to `selectLine()`
     window.IDE.evaluateLine();
 }
@@ -76,10 +80,13 @@ const selectRegion = (options = { flash: true }) => {
 
     const findLeftParen = cursor => {
         let cursorLeft = editor.findPosH(cursor, -1, 'char')
+        let token = editor.getTokenTypeAt(cursor) || ''
         if (cursorLeft.hitSide)
             return cursorLeft
         let ch = editor.getLine(cursorLeft.line)
             .slice(cursorLeft.ch, cursorLeft.ch+1)
+        if (token.match(/^(comment|string|symbol|char)/))
+            return findLeftParen(cursorLeft)
         if (ch === ')')
             return findLeftParen(findLeftParen(cursorLeft))
         if (ch === '(')
@@ -89,10 +96,13 @@ const selectRegion = (options = { flash: true }) => {
 
     const findRightParen = cursor => {
         let cursorRight = editor.findPosH(cursor, 1, 'char')
+        let token = editor.getTokenTypeAt(cursor) || ''
         if (cursorRight.hitSide)
             return cursorRight
         let ch = editor.getLine(cursorRight.line)
             .slice(cursorRight.ch-1, cursorRight.ch)
+        if (token.match(/^(comment|string|symbol|char)/))
+            return findRightParen(cursorRight)
         if (ch === '(')
             return findRightParen(findRightParen(cursorRight))
         if (ch === ')')

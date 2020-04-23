@@ -94,5 +94,63 @@ TestString : UnitTest {
 		this.assertEquals("dir" +/+ 'file', "dir%file".format(sep));
 	}
 
-}
+	// regression tests for #4252
+	test_standardizePath_withTrailingSlash_shouldNotRemove {
+		var result = "~/".standardizePath;
+		var expected = "~".standardizePath ++ "/";
+		this.assertEquals(result, expected);
+	}
 
+	test_standardizePath_withTwoTrailingSlashes_shouldNotRemove {
+		var result = "~//".standardizePath;
+		var expected = "~".standardizePath ++ "//";
+		this.assertEquals(result, expected);
+	}
+
+	test_standardizePath_tilde_expandsToHome {
+		var result = "~".standardizePath;
+		var expected = Platform.userHomeDir;
+		this.assertEquals(result, expected);
+	}
+
+	// ------- time-related operations -----------------------------------------------
+
+	test_asSecs_stringDddHhMmSsSss_convertsToSeconds {
+		var result = "001:01:01:01.001".asSecs;
+		var expected = 90061.001;
+		this.assertEquals(result, expected);
+	}
+
+	test_asSecs_stringSsSss_convertsToSeconds {
+		var result = "01.001".asSecs;
+		var expected = 1.001;
+		this.assertEquals(result, expected);
+	}
+
+	test_asSecs_stringMmSs_convertsToSeconds {
+		var result = "01:01".asSecs;
+		var expected = 61.0;
+		this.assertEquals(result, expected);
+	}
+
+	test_asSecs_stringSs_convertsToSeconds {
+		var result = "01".asSecs;
+		var expected = 1.0;
+		this.assertEquals(result, expected);
+	}
+
+	test_findRegexp_nonEmptyResult {
+		var result = "two words".findRegexp("[a-zA-Z]+");
+		this.assertEquals(
+			result,
+			[[0, "two"], [4, "words"]],
+			"`\"two words\".findRegexp(\"[a-zA-Z]+\")` should return a nested array of indices and matches"
+		)
+	}
+
+	test_findRegexp_emptyResult {
+		var result = "the quick brown fox".findRegexp("moo");
+		this.assertEquals(result, Array.new, "Non-matching findRegexp should return empty array");
+	}
+
+}

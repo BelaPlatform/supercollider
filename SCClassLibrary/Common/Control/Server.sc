@@ -1,52 +1,60 @@
 ServerOptions {
+	classvar defaultValues;
+
 	// order of variables is important here. Only add new instance variables to the end.
-	var <numAudioBusChannels=1024;
-	var <>numControlBusChannels=16384;
-	var <numInputBusChannels=2;
-	var <numOutputBusChannels=2;
-	var <>numBuffers=1026;
+	var <numAudioBusChannels;
+	var <>numControlBusChannels;
+	var <numInputBusChannels;
+	var <numOutputBusChannels;
+	var <>numBuffers;
 
-	var <>maxNodes=1024;
-	var <>maxSynthDefs=1024;
-	var <>protocol = \udp;
-	var <>blockSize = 64;
-	var <>hardwareBufferSize = nil;
+	var <>maxNodes;
+	var <>maxSynthDefs;
+	var <>protocol;
+	var <>blockSize;
+	var <>hardwareBufferSize;
 
-	var <>memSize = 8192;
-	var <>numRGens = 64;
-	var <>numWireBufs = 64;
+	var <>memSize;
+	var <>numRGens;
+	var <>numWireBufs;
 
-	var <>sampleRate = nil;
-	var <>loadDefs = true;
+	var <>sampleRate;
+	var <>loadDefs;
 
 	var <>inputStreamsEnabled;
 	var <>outputStreamsEnabled;
 
-	var <>inDevice = nil;
-	var <>outDevice = nil;
+	var <>inDevice;
+	var <>outDevice;
 
-	var <>verbosity = 0;
-	var <>zeroConf = false; // Whether server publishes port to Bonjour, etc.
+	var <>verbosity;
+	var <>zeroConf; // Whether server publishes port to Bonjour, etc.
 
-	var <>restrictedPath = nil;
-	var <>ugenPluginsPath = nil;
+	var <>restrictedPath;
+	var <>ugenPluginsPath;
 
-	var <>initialNodeID = 1000;
-	var <>remoteControlVolume = false;
+	var <>initialNodeID;
+	var <>remoteControlVolume;
 
-	var <>memoryLocking = false;
-	var <>threads = nil; // for supernova
-	var <>useSystemClock = false;  // for supernova
+	var <>memoryLocking;
+	var <>threads; // for supernova
+	var <>useSystemClock;  // for supernova
 
-	var <numPrivateAudioBusChannels=1020;
+	var <numPrivateAudioBusChannels;
 
-	var <>reservedNumAudioBusChannels = 0;
-	var <>reservedNumControlBusChannels = 0;
-	var <>reservedNumBuffers = 0;
-	var <>pingsBeforeConsideredDead = 5;
+	var <>reservedNumAudioBusChannels;
+	var <>reservedNumControlBusChannels;
+	var <>reservedNumBuffers;
+	var <>pingsBeforeConsideredDead;
 
+	var <>maxLogins;
 
-	var <>maxLogins = 1;
+	var <>recHeaderFormat;
+	var <>recSampleFormat;
+	var <>recChannels;
+	var <>recBufSize;
+
+	var <>bindAddress;
 
 	// extension for BELA
 	var <>numAnalogInChannels;
@@ -61,11 +69,69 @@ ServerOptions {
 	var <>numMultiplexChannels;
 	var <>belaPRU;
 
-	var <>recHeaderFormat="aiff";
-	var <>recSampleFormat="float";
-	var <>recChannels = 2;
-	var <>recBufSize = nil;
+	*initClass {
+		defaultValues = IdentityDictionary.newFrom(
+			(
+				numAudioBusChannels: 1024, // see corresponding setter method below
+				numControlBusChannels: 16384,
+				numInputBusChannels: 2, // see corresponding setter method below
+				numOutputBusChannels: 2, // see corresponding setter method below
+				numBuffers: 1024,
+				maxNodes: 1024,
+				maxSynthDefs: 1024,
+				protocol: \udp,
+				blockSize: 64,
+				hardwareBufferSize: nil,
+				memSize: 8192,
+				numRGens: 64,
+				numWireBufs: 64,
+				sampleRate: nil,
+				loadDefs: true,
+				inputStreamsEnabled: nil,
+				outputStreamsEnabled: nil,
+				inDevice: nil,
+				outDevice: nil,
+				verbosity: 0,
+				zeroConf: false,
+				restrictedPath: nil,
+				ugenPluginsPath: nil,
+				initialNodeID: 1000,
+				remoteControlVolume: false,
+				memoryLocking: false,
+				threads: nil,
+				useSystemClock: false,
+				numPrivateAudioBusChannels: 1020, // see corresponding setter method below
+				reservedNumAudioBusChannels: 0,
+				reservedNumControlBusChannels: 0,
+				reservedNumBuffers: 0,
+				pingsBeforeConsideredDead: 5,
+				maxLogins: 1,
+				recHeaderFormat: "aiff",
+				recSampleFormat: "float",
+				recChannels: 2,
+				recBufSize: nil,
+				bindAddress: "127.0.0.1",
+				numAnalogInChannels: 8,
+				numAnalogOutChannels: 8,
+				numDigitalChannels: 16,
+				headphoneLevel: -6.0,
+				pgaGainLeft: 20.0,
+				pgaGainRight: 20.0,
+				speakerMuted: false,
+				dacLevel: 0.0,
+				adclevel: 0.0
+			)
+		)
+	}
 
+
+	*new {
+		^super.new.init
+	}
+
+	init {
+		defaultValues.keysValuesDo { |key, val| this.instVarPut(key, val) }
+	}
 
 	device {
 		^if(inDevice == outDevice) {
@@ -85,38 +151,45 @@ ServerOptions {
 		o = o ++ port;
 
 		o = o ++ " -a " ++ (numPrivateAudioBusChannels + numInputBusChannels + numOutputBusChannels) ;
+		o = o ++ " -i " ++ numInputBusChannels;
+		o = o ++ " -o " ++ numOutputBusChannels;
 
-		if (numControlBusChannels != 16384, {
+		if (bindAddress != defaultValues[\bindAddress], {
+			o = o ++ " -B " ++ bindAddress;
+		});
+		if (numControlBusChannels !== defaultValues[\numControlBusChannels], {
+			numControlBusChannels = numControlBusChannels.asInteger;
 			o = o ++ " -c " ++ numControlBusChannels;
 		});
-		if (numInputBusChannels != 8, {
-			o = o ++ " -i " ++ numInputBusChannels;
-		});
-		if (numOutputBusChannels != 8, {
-			o = o ++ " -o " ++ numOutputBusChannels;
-		});
-		if (numBuffers != 1024, {
+		if (numBuffers !== defaultValues[\numBuffers], {
+			numBuffers = numBuffers.asInteger;
 			o = o ++ " -b " ++ numBuffers;
 		});
-		if (maxNodes != 1024, {
+		if (maxNodes !== defaultValues[\maxNodes], {
+			maxNodes = maxNodes.asInteger;
 			o = o ++ " -n " ++ maxNodes;
 		});
-		if (maxSynthDefs != 1024, {
+		if (maxSynthDefs !== defaultValues[\maxSynthDefs], {
+			maxSynthDefs = maxSynthDefs.asInteger;
 			o = o ++ " -d " ++ maxSynthDefs;
 		});
-		if (blockSize != 64, {
+		if (blockSize !== defaultValues[\blockSize], {
+			blockSize = blockSize.asInteger;
 			o = o ++ " -z " ++ blockSize;
 		});
 		if (hardwareBufferSize.notNil, {
 			o = o ++ " -Z " ++ hardwareBufferSize;
 		});
-		if (memSize != 8192, {
+		if (memSize !== defaultValues[\memSize], {
+			memSize = memSize.asInteger;
 			o = o ++ " -m " ++ memSize;
 		});
-		if (numRGens != 64, {
+		if (numRGens !== defaultValues[\numRGens], {
+			numRGens = numRGens.asInteger;
 			o = o ++ " -r " ++ numRGens;
 		});
-		if (numWireBufs != 64, {
+		if (numWireBufs !== defaultValues[\numWireBufs], {
+			numWireBufs = numWireBufs.asInteger;
 			o = o ++ " -w " ++ numWireBufs;
 		});
 		if (sampleRate.notNil, {
@@ -131,7 +204,7 @@ ServerOptions {
 		if (outputStreamsEnabled.notNil, {
 			o = o ++ " -O " ++ outputStreamsEnabled ;
 		});
-		if ((thisProcess.platform.name!=\osx) or: {inDevice == outDevice})
+		if (inDevice == outDevice)
 		{
 			if (inDevice.notNil,
 				{
@@ -141,7 +214,7 @@ ServerOptions {
 		{
 			o = o ++ " -H % %".format(inDevice.asString.quote, outDevice.asString.quote);
 		};
-		if (verbosity != 0, {
+		if (verbosity != defaultValues[\verbosity], {
 			o = o ++ " -V " ++ verbosity;
 		});
 		if (zeroConf.not, {
@@ -166,8 +239,8 @@ ServerOptions {
 				o = o ++ " -T " ++ threads;
 			}
 		});
-		if (useSystemClock.notNil, {
-			o = o ++ " -C " ++ useSystemClock.asInteger
+		if (useSystemClock, {
+			o = o ++ " -C 1"
 		});
 		if (maxLogins.notNil, {
 			o = o ++ " -l " ++ maxLogins;
@@ -219,22 +292,22 @@ ServerOptions {
 		^this.primitiveFailed
 	}
 
-	numPrivateAudioBusChannels_ { |numChannels = 112|
+	numPrivateAudioBusChannels_ { |numChannels = 1020| // arg default value should match defaultValues above
 		numPrivateAudioBusChannels = numChannels;
 		this.recalcChannels;
 	}
 
-	numAudioBusChannels_ { |numChannels=1024|
+	numAudioBusChannels_ { |numChannels = 1024| // arg default value should match defaultValues above
 		numAudioBusChannels = numChannels;
 		numPrivateAudioBusChannels = numAudioBusChannels - numInputBusChannels - numOutputBusChannels;
 	}
 
-	numInputBusChannels_ { |numChannels=8|
+	numInputBusChannels_ { |numChannels = 2| // arg default value should match defaultValues above
 		numInputBusChannels = numChannels;
 		this.recalcChannels;
 	}
 
-	numOutputBusChannels_ { |numChannels=8|
+	numOutputBusChannels_ { |numChannels = 2| // arg default value should match defaultValues above
 		numOutputBusChannels = numChannels;
 		this.recalcChannels;
 	}
@@ -1009,7 +1082,10 @@ Server {
 				this.prOnServerProcessExit(exitCode);
 			});
 			("Booting server '%' on address %:%.").format(this.name, addr.hostname, addr.port.asString).postln;
-			if(options.protocol == \tcp, { addr.tryConnectTCP(onComplete) }, onComplete);
+			// in case the server takes more time to boot
+			// we increase the number of attempts for tcp connection
+			// in order to minimize the chance of timing out
+			if(options.protocol == \tcp, { addr.tryConnectTCP(onComplete, nil, 20) }, onComplete);
 		}
 	}
 

@@ -1,5 +1,27 @@
 find_package(Sndfile)
 
+# here we choose who provides us with the FFT lib
+# this is done independently for scsynth and supernova
+# on macOS scsynth uses vDSP implementation for FFT
+# which is not thread-safe
+
+if (APPLE)
+    add_definitions("-DSC_FFT_VDSP")
+    message(STATUS "FFT library (scsynth): vDSP")
+else()
+    find_package(FFTW3f 3.3)
+
+    if (NOT FFTW3F_FOUND OR FFT_GREEN)
+        message(STATUS "FFT library (scsynth): Green")
+        set(FFT_GREEN 1)
+        add_definitions("-DSC_FFT_GREEN")
+    else()
+        message(STATUS "Found fftw3f: ${FFTW3F_LIBRARY}")
+        message(STATUS "FFT library (scsynth): FFTW")
+        add_definitions("-DSC_FFT_FFTW")
+    endif()
+endif()
+
 # Here we work out which audio API to use, from system type and/or user option.
 if(AUDIOAPI STREQUAL "default")
 	if(APPLE)
@@ -116,7 +138,7 @@ if (AUDIOAPI STREQUAL jack)
 	add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_JACK" ${JACK_DEFINITIONS})
 	include_directories(${JACK_INCLUDE_DIRS})
 elseif (AUDIOAPI STREQUAL portaudio)
-	list(APPEND scsynth_sources SC_PortAudio.cpp)
+	list(APPEND scsynth_sources SC_PortAudio.cpp ${CMAKE_SOURCE_DIR}/common/SC_PaUtils.cpp)
 	add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_PORTAUDIO" ${PORTAUDIO_DEFINITIONS})
 	include_directories(${PORTAUDIO_INCLUDE_DIRS})
 elseif (AUDIOAPI STREQUAL bela)
@@ -201,11 +223,8 @@ elseif(AUDIOAPI STREQUAL coreaudio)
 	target_link_libraries(libscsynth "-framework CoreAudio")
 endif()
 
-if (Boost_FOUND)
-	target_link_libraries(libscsynth ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} )
-else()
-	target_link_libraries(libscsynth boost_system boost_filesystem)
-endif()
+target_link_libraries(libscsynth boost_system_lib boost_filesystem_lib)
+target_include_directories(libscsynth PUBLIC ${boost_include_dirs})
 
 if (WIN32)
 	target_link_libraries(libscsynth wsock32 ws2_32 winmm)
@@ -227,7 +246,8 @@ if (FFTW3F_FOUND)
 endif()
 
 if (APPLE)
-	target_link_libraries(libscsynth "-framework Accelerate -framework CoreServices -framework Foundation")
+	target_link_libraries(libscsynth "-framework Accelerate -framework CoreServices"
+                                        "-framework Foundation -framework AppKit")
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")

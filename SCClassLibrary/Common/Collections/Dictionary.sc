@@ -371,6 +371,7 @@ Dictionary : Set {
 	}
 
 	== { arg that;
+		if (that === this) { ^true };
 		if(that.isKindOf(this.class).not) { ^false };
 		if(that.size != this.size) { ^false };
 		that.keysValuesDo { |key, val|
@@ -546,7 +547,7 @@ IdentityDictionary : Dictionary {
 				selector = selector.asGetter;
 				if(this.respondsTo(selector)) {
 					warn(selector.asCompileString
-						+ "exists a method name, so you can't use it as pseudo-method.")
+						+ "exists as a method name, so you can't use it as a pseudo-method.")
 				};
 				^this[selector] = args[0];
 			};
