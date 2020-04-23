@@ -149,7 +149,109 @@ int scsynth_main(int argc, char** argv) {
 
     WorldOptions options;
 
+#ifdef BELA
+    // defaults
+    options.mBelaAnalogInputChannels = 0;
+    options.mBelaAnalogOutputChannels = 0;
+    options.mBelaDigitalChannels = 0;
+    options.mBelaHeadphoneLevel = -6.;
+    options.mBelaPGAGainLeft = 20;
+    options.mBelaPGAGainRight = 20;
+    options.mBelaSpeakerMuted = 0;
+    options.mBelaADCLevel = 0;
+    options.mBelaDACLevel = 0;
+    options.mBelaNumMuxChannels = 0;
+    options.mBelaPRU = 1;
+#endif
 
+    for (int i = 1; i < argc;) {
+#ifdef BELA
+        if (argv[i][0] != '-' || argv[i][1] == 0 || strchr("utBaioczblndpmwZrCNSDIOMHvVRUhPLJKGXYQsxygT", argv[i][1]) == nullptr) {
+#else
+        if (argv[i][0] != '-' || argv[i][1] == 0 || strchr("utBaioczblndpmwZrCNSDIOMHvVRUhPL", argv[i][1]) == nullptr) {
+#endif
+            scprintf("ERROR: Invalid option %s\n", argv[i]);
+            Usage();
+        }
+        int j = i;
+        switch (argv[j][1]) {
+        case 'u':
+            checkNumArgs(2);
+            udpPortNum = atoi(argv[j + 1]);
+            break;
+        case 't':
+            checkNumArgs(2);
+            tcpPortNum = atoi(argv[j + 1]);
+            break;
+        case 'B':
+            checkNumArgs(2);
+            bindTo = argv[j + 1];
+            break;
+        case 'a':
+            checkNumArgs(2);
+            options.mNumAudioBusChannels = atoi(argv[j + 1]);
+            break;
+        case 'i':
+            checkNumArgs(2);
+            options.mNumInputBusChannels = atoi(argv[j + 1]);
+            break;
+        case 'o':
+            checkNumArgs(2);
+            options.mNumOutputBusChannels = atoi(argv[j + 1]);
+            break;
+        case 'c':
+            checkNumArgs(2);
+            options.mNumControlBusChannels = atoi(argv[j + 1]);
+            break;
+        case 'z':
+            checkNumArgs(2);
+            options.mBufLength = NEXTPOWEROFTWO(atoi(argv[j + 1]));
+            break;
+        case 'Z':
+            checkNumArgs(2);
+            options.mPreferredHardwareBufferFrameSize = NEXTPOWEROFTWO(atoi(argv[j + 1]));
+            break;
+        case 'b':
+            checkNumArgs(2);
+            options.mNumBuffers = NEXTPOWEROFTWO(atoi(argv[j + 1]));
+            break;
+        case 'l':
+            checkNumArgs(2);
+            options.mMaxLogins = NEXTPOWEROFTWO(atoi(argv[j + 1]));
+            break;
+        case 'n':
+            checkNumArgs(2);
+            options.mMaxNodes = NEXTPOWEROFTWO(atoi(argv[j + 1]));
+            break;
+        case 'd':
+            checkNumArgs(2);
+            options.mMaxGraphDefs = NEXTPOWEROFTWO(atoi(argv[j + 1]));
+            break;
+        case 'p':
+            checkNumArgs(2);
+            options.mPassword = argv[j + 1];
+            break;
+        case 'm':
+            checkNumArgs(2);
+            options.mRealTimeMemorySize = atoi(argv[j + 1]);
+            break;
+        case 'w':
+            checkNumArgs(2);
+            options.mMaxWireBufs = atoi(argv[j + 1]);
+            break;
+        case 'r':
+            checkNumArgs(2);
+            options.mNumRGens = atoi(argv[j + 1]);
+            break;
+        case 'S':
+            checkNumArgs(2);
+            options.mPreferredSampleRate = (uint32)atof(argv[j + 1]);
+            break;
+        case 'D':
+            checkNumArgs(2);
+            options.mLoadGraphDefs = atoi(argv[j + 1]);
+            break;
+        case 'N':
 #ifdef NO_LIBSNDFILE
             scprintf("NRT mode not supported: scsynth compiled without libsndfile\n");
             exit(0);
@@ -193,7 +295,102 @@ int scsynth_main(int argc, char** argv) {
 #else
             options.mMemoryLocking = false;
 #endif
+            break;
+#ifdef BELA
+        case 'J' :
+            checkNumArgs(2);
+            options.mBelaAnalogInputChannels = atoi(argv[j+1]);
+            break;
+        case 'K' :
+            checkNumArgs(2);
+            options.mBelaAnalogOutputChannels = atoi(argv[j+1]);
+            break;
+        case 'G' :
+            checkNumArgs(2);
+            options.mBelaDigitalChannels = atoi(argv[j+1]);
+            break;
+        case 'Q' :
+            checkNumArgs(2);
+            options.mBelaHeadphoneLevel = atof(argv[j+1]);
+            break;
+        case 'X' :
+            checkNumArgs(2);
+            options.mBelaPGAGainLeft = atof(argv[j+1]);
+            break;
+        case 'Y' :
+            checkNumArgs(2);
+            options.mBelaPGAGainRight = atof(argv[j+1]);
+            break;
+        case 's' :
+            checkNumArgs(2);
+            options.mBelaSpeakerMuted = atoi(argv[j+1]) > 0;
+            break;
+        case 'x' :
+            checkNumArgs(2);
+            options.mBelaDACLevel = atof(argv[j+1]);
+            break;
+        case 'y' :
+            checkNumArgs(2);
+            options.mBelaADCLevel = atof(argv[j+1]);
+            break;
+        case 'g' :
+            checkNumArgs(2);
+            options.mBelaNumMuxChannels = atoi(argv[j+1]);
+            break;
+        case 'T' :
+            checkNumArgs(2);
+            options.mBelaPRU = atoi(argv[j+1]);
+            break;
+#endif
+        case 'V':
+            checkNumArgs(2);
+            options.mVerbosity = atoi(argv[j + 1]);
+            break;
+        case 'v':
+            scprintf("scsynth %s (%s)\n", SC_VersionString().c_str(), SC_BuildString().c_str());
+            exit(0);
+            break;
+        case 'R':
+            checkNumArgs(2);
+            options.mRendezvous = atoi(argv[j + 1]) > 0;
+            break;
+        case 'U':
+            checkNumArgs(2);
+            options.mUGensPluginPath = argv[j + 1];
+            break;
+        case 'P':
+            checkNumArgs(2);
+            options.mRestrictedPath = argv[j + 1];
+            break;
+        case 'C':
+            checkNumArgs(2);
+            break;
+        case 'h':
+        default:
+            Usage();
+        }
+    }
+    if (udpPortNum == -1 && tcpPortNum == -1 && options.mRealTime) {
+        scprintf("ERROR: There must be a -u and/or a -t options, or -N for nonrealtime.\n");
+        Usage();
+    }
+    if (options.mNumInputBusChannels + options.mNumOutputBusChannels > options.mNumAudioBusChannels) {
+        scprintf("ERROR: number of audio bus channels < inputs + outputs.\n");
+        Usage();
+    }
 
+    if (options.mRealTime) {
+        int port = (udpPortNum > 0) ? udpPortNum : tcpPortNum;
+
+        options.mSharedMemoryID = port;
+    } else
+        options.mSharedMemoryID = 0;
+
+    struct World* world = World_New(&options);
+    if (!world)
+        return 1;
+
+    if (!options.mRealTime) {
 #ifdef NO_LIBSNDFILE
         return 1;
 #else

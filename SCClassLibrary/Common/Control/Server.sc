@@ -111,16 +111,17 @@ ServerOptions {
 				recChannels: 2,
 				recBufSize: nil,
 				bindAddress: "127.0.0.1",
-				numAnalogInChannels: 8,
-				numAnalogOutChannels: 8,
-				numDigitalChannels: 16,
+				numAnalogInChannels: 0,
+				numAnalogOutChannels: 0,
+				numDigitalChannels: 0,
 				headphoneLevel: -6.0,
 				pgaGainLeft: 20.0,
 				pgaGainRight: 20.0,
-				speakerMuted: false,
+				speakerMuted: 0,
 				dacLevel: 0.0,
 				adclevel: 0.0,
-                belaPRU: 0
+				numMultiplexChannels: 0,
+                belaPRU: 1
 			)
 		)
 	}
