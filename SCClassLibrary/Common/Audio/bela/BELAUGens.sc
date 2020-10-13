@@ -92,3 +92,15 @@ DigitalIO : UGen {
         ^this.multiNew('control', digitalPin, output, pinMode ).madd(mul,add)
     }
 }
+
+/* input 1: bus
+ * input 2: number of channels to scope
+ */
+BelaScopeUGen : AbstractOut {
+    *ar { arg busnum, numChannels;
+       super.performList('new1', 'audio', In.ar(busnum, numChannels));
+       ^0.0;    // BelaScopeUGen has no outputs
+    }
+    *numFixedArgs { ^0 }
+    writesToBus { ^false }
+}

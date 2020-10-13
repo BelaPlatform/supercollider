@@ -99,6 +99,7 @@ if (BELA_FOUND)
 	add_definitions("-DBELA" ${XENOMAI_DEFINITIONS} ${BELA_DEFINITIONS})
 	include_directories(${XENOMAI_INCLUDE_DIRS})
 	include_directories(${BELA_INCLUDE_DIRS})
+	include_directories(${BELA_INCLUDE_DIRS}/../)
 
 # 	set(CMAKE_EXECUTABLE_RUNTIME_C_FLAG       "-Wl,-wrap,clock_gettime,-rpath,")
 # 	set(CMAKE_EXECUTABLE_RUNTIME_CXX_FLAG     "-Wl,-wrap,clock_gettime,-rpath,")
