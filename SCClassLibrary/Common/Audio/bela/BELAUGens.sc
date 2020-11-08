@@ -39,10 +39,12 @@ AnalogIn : UGen {
  */
 AnalogOut : UGen {
     *ar { arg analogPin = 0, output=0, mul=1.0, add=0.0;
-        ^this.multiNew('audio', analogPin, output ).madd(mul,add)
+        this.multiNew('audio', analogPin, output ).madd(mul,add);
+        ^0.0;
     }
     *kr { arg analogPin = 0, output=0, mul=1.0, add=0.0;
-        ^this.multiNew('control', analogPin, output ).madd(mul,add)
+        this.multiNew('control', analogPin, output ).madd(mul,add);
+        ^0.0;
     }
 	numOutputs { ^0 }
 	writeOutputSpecs {}
@@ -68,10 +70,12 @@ DigitalIn : UGen {
  */
 DigitalOut : UGen {
     *ar { arg digitalPin = 0, output=0, writeMode=0, mul=1.0, add=0.0;
-        ^this.multiNew('audio', digitalPin, output, writeMode ).madd(mul,add)
+        this.multiNew('audio', digitalPin, output, writeMode ).madd(mul,add);
+        ^0.0;
     }
     *kr { arg digitalPin = 0, output=0, writeMode=0, mul=1.0, add=0.0;
-        ^this.multiNew('control', digitalPin, output, writeMode ).madd(mul,add)
+        this.multiNew('control', digitalPin, output, writeMode ).madd(mul,add);
+        ^0.0;
     }
     numOutputs { ^0 }
     writeOutputSpecs {}
