@@ -1,0 +1,17 @@
+class:: BelaScopeUGen
+summary:: Bela's Oscilloscope interface
+categories::  UGens>BELA
+
+Description::
+note::
+This UGen only works on Bela
+::
+This UGen is used internally to plot signals to Bela's Oscilloscope. Direct usage of this UGen should never be needed. See link::Classes/BelaScope::
+
+classmethods::
+
+method::ar
+argument::busnum
+index of the bus from which to read data to be scoped
+argument::numChannels
+number of channels to read and 

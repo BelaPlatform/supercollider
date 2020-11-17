@@ -6,6 +6,14 @@ BelaScope {
 	// public interface
 
 	*scope { |channelOffset, signals, server|
+		server ?? {
+			var servers = serverScopes.keys.asArray;
+			server = servers.first;
+			if(servers.size > 1) {
+				warn("BelaScope: server not specified, using '%', but more options are available")
+			}
+		};
+		server = server ? Server.default;
 		^this.getInstance(server).scope(channelOffset, signals);
 	}
 
@@ -174,7 +182,7 @@ BelaScope {
 }
 
 + Server {
-	belaScope { |scopeChannel, numChannels, index = 0|
+	belaScope { |scopeChannel, index = 0, numChannels|
 		numChannels = numChannels ?? { if (index == 0) { options.numOutputBusChannels } { 2 } };
 		^Bus(\audio, index, numChannels, this).belaScope(scopeChannel);
 	}
