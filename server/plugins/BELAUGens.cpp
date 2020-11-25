@@ -692,9 +692,6 @@ void DigitalOut_Ctor(DigitalOut* unit) {
         (int)ZIN0(2); // method of writing; 1 = writeOnce; 0 = write on change -- cannot change after construction
     unit->mDigitalPin = (int)fDigital;
     unit->mLastOut = 0;
-    // initialize first buffer
-    pinMode(context, 0, unit->mDigitalPin, OUTPUT);
-    digitalWrite(context, 0, unit->mDigitalPin, unit->mLastOut);
 
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
         rt_printf("DigitalOut warning: digital pin must be between %i and %i, it is %i \n", 0, context->digitalChannels,
@@ -704,8 +701,10 @@ void DigitalOut_Ctor(DigitalOut* unit) {
         // set calculation method
         SETCALC(DigitalOut_next_dummy);
     } else {
+        // initialize first buffer
         pinMode(context, 0, unit->mDigitalPin, OUTPUT);
-        // initiate first sample
+        digitalWrite(context, 0, unit->mDigitalPin, unit->mLastOut);
+        // initiate first sample (unsure if needed)
         DigitalOut_next_k(unit, 1);
 
         if (unit->mCalcRate == calc_FullRate) { // ugen running at audio rate;
