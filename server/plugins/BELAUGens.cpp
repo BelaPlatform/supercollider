@@ -73,6 +73,7 @@ struct DigitalOutA : public Unit {
 
 // flexible digital pin, flexible function (in or out)
 struct DigitalIO : public Unit {
+    int mDigitalPin;
     int mLastDigitalIn;
     int mLastDigitalOut;
 };
@@ -281,18 +282,21 @@ void MultiplexAnalogIn_Ctor(MultiplexAnalogIn* unit) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-// returns false if pin is out of range, so that _next functions can avoid to write there
-bool AnalogIn_updatePin(AnalogIn* unit, int newAnalogPin) {
-    BelaContext* context = unit->mWorld->mBelaContext;
-    bool isValid = (newAnalogPin >= 0) && (newAnalogPin < context->analogInChannels);
-    if (newAnalogPin != unit->mAnalogPin) {
-        unit->mAnalogPin = newAnalogPin;
+static bool updatePin(unsigned int numChannels, unsigned int newPin, int* oldPin, const char* label) {
+    bool isValid = newPin < numChannels;
+    if (newPin != *oldPin) {
+        *oldPin = newPin;
         if (!isValid) {
-            rt_fprintf(stderr, "AnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
-                       context->analogInChannels, newAnalogPin);
+            rt_fprintf(stderr, "%s warning: pin must be 0 <= pin <= %i, it is %i \n", label, numChannels - 1, newPin);
         }
     }
     return isValid;
+}
+
+// returns false if pin is out of range, so that _next functions should avoid using it
+bool AnalogIn_updatePin(AnalogIn* unit, int newPin) {
+    BelaContext* context = unit->mWorld->mBelaContext;
+    return updatePin(context->analogInChannels, newPin, &unit->mAnalogPin, "AnalogIn");
 }
 
 void AnalogIn_next_aa(AnalogIn* unit, int inNumSamples) {
@@ -379,18 +383,10 @@ void AnalogIn_Ctor(AnalogIn* unit) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-// returns false if pin is out of range, so that _next functions can avoid to write there
-bool AnalogOut_updatePin(AnalogOut* unit, int newAnalogPin) {
+// returns false if pin is out of range, so that _next functions should avoid using it
+bool AnalogOut_updatePin(AnalogOut* unit, int newPin) {
     BelaContext* context = unit->mWorld->mBelaContext;
-    bool isValid = (newAnalogPin >= 0) && (newAnalogPin < context->analogOutChannels);
-    if (newAnalogPin != unit->mAnalogPin) {
-        unit->mAnalogPin = newAnalogPin;
-        if (!isValid) {
-            rt_fprintf(stderr, "AnalogOut warning: analog pin must be %i <= pin ,= %i, it is %i\n", 0,
-                       context->analogOutChannels, newAnalogPin);
-        }
-    }
-    return isValid;
+    return updatePin(context->analogOutChannels, newPin, &unit->mAnalogPin, "AnalogOut");
 }
 
 void AnalogOut_next_aaa(AnalogOut* unit, int inNumSamples) {
@@ -659,6 +655,12 @@ void DigitalOut_Ctor(DigitalOut* unit) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+// returns false if pin is out of range, so that _next functions should avoid using it
+bool DigitalIO_updatePin(DigitalIO* unit, int newPin) {
+    BelaContext* context = unit->mWorld->mBelaContext;
+    return updatePin(context->digitalChannels, newPin, &unit->mDigitalPin, "DigitalIO");
+}
+
 void DigitalIO_next_aaaa_once(DigitalIO* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
@@ -668,28 +670,21 @@ void DigitalIO_next_aaaa_once(DigitalIO* unit, int inNumSamples) {
     float* iomode = IN(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin;
-    float newmode = 0; // input
-
     int newDigInInt = unit->mLastDigitalIn;
     float newDigIn = (float)newDigInInt;
     int newDigOut = unit->mLastDigitalOut;
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        newpin = (int)pinid[n];
-        if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-            rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0,
-                      context->digitalChannels, newpin);
-        } else {
-            newDigOut = (int)in[n];
-            newmode = iomode[n];
+        if (DigitalIO_updatePin(unit, pinid[n])) {
+            float newmode = iomode[n];
             if (newmode < 0.5) {
-                pinModeOnce(context, n, newpin, INPUT);
-                newDigInInt = digitalRead(context, n, newpin);
+                pinModeOnce(context, n, unit->mDigitalPin, INPUT);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
             } else {
-                pinModeOnce(context, n, newpin, OUTPUT);
-                digitalWriteOnce(context, n, newpin, newDigOut);
+                newDigOut = (int)in[n];
+                pinModeOnce(context, n, unit->mDigitalPin, OUTPUT);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
             }
         }
         // always write to the output of the UGen
@@ -714,32 +709,22 @@ void DigitalIO_next_aaak_once(DigitalIO* unit, int inNumSamples) {
     float newDigIn = (float)newDigInInt;
 
     int newDigOut = unit->mLastDigitalOut;
-    //   float newinput;
 
-    int newpin;
     if (iomode < 0.5) {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            newpin = (int)pinid[n];
-            if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-                rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0,
-                          context->digitalChannels, newpin);
-            } else {
-                pinModeOnce(context, n, newpin, INPUT);
-                newDigInInt = digitalRead(context, n, newpin);
+            if (DigitalIO_updatePin(unit, pinid[n])) {
+                pinModeOnce(context, n, unit->mDigitalPin, INPUT);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
             }
             // always write to the output of the UGen
             *++out = (float)newDigInInt;
         }
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            newpin = (int)pinid[n];
-            if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-                rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0,
-                          context->digitalChannels, newpin);
-            } else {
-                pinModeOnce(context, n, newpin, OUTPUT);
+            if (DigitalIO_updatePin(unit, pinid[n])) {
+                pinModeOnce(context, n, unit->mDigitalPin, OUTPUT);
                 newDigOut = (int)in[n];
-                digitalWriteOnce(context, n, newpin, newDigOut);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
             }
             *++out = (float)newDigInInt;
         }
@@ -758,7 +743,6 @@ void DigitalIO_next_aaka_once(DigitalIO* unit, int inNumSamples) {
     float* iomode = IN(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin;
     float newmode = 0; // input
 
     int newDigInInt = unit->mLastDigitalIn;
@@ -768,18 +752,14 @@ void DigitalIO_next_aaka_once(DigitalIO* unit, int inNumSamples) {
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        newpin = (int)pinid[n];
-        if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-            rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0,
-                      context->digitalChannels, newpin);
-        } else {
+        if (DigitalIO_updatePin(unit, pinid[n])) {
             newmode = iomode[n];
             if (newmode < 0.5) {
-                pinModeOnce(context, n, newpin, INPUT);
-                newDigInInt = digitalRead(context, n, newpin);
+                pinModeOnce(context, n, unit->mDigitalPin, INPUT);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
             } else {
-                pinModeOnce(context, n, newpin, OUTPUT);
-                digitalWriteOnce(context, n, newpin, newDigOut);
+                pinModeOnce(context, n, unit->mDigitalPin, OUTPUT);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
             }
         }
         // always write to the output of the UGen
@@ -800,9 +780,6 @@ void DigitalIO_next_aakk_once(DigitalIO* unit, int inNumSamples) {
     float iomode = IN0(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin;
-    float newmode = 0; // input
-
     int newDigInInt = unit->mLastDigitalIn;
     float newDigIn = (float)newDigInInt;
     //   int newDigOut = unit->mLastDigitalOut;
@@ -810,26 +787,18 @@ void DigitalIO_next_aakk_once(DigitalIO* unit, int inNumSamples) {
 
     if (iomode < 0.5) {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            newpin = (int)pinid[n];
-            if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-                rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0,
-                          context->digitalChannels, newpin);
-            } else {
-                pinModeOnce(context, n, newpin, INPUT);
-                newDigInInt = digitalRead(context, n, newpin);
+            if (DigitalIO_updatePin(unit, pinid[n])) {
+                pinModeOnce(context, n, unit->mDigitalPin, INPUT);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
             }
             // always write to the output of the UGen
             *++out = (float)newDigInInt;
         }
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            newpin = (int)pinid[n];
-            if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-                rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0,
-                          context->digitalChannels, newpin);
-            } else {
-                pinModeOnce(context, n, newpin, OUTPUT);
-                digitalWriteOnce(context, n, newpin, newDigOut);
+            if (DigitalIO_updatePin(unit, pinid[n])) {
+                pinModeOnce(context, n, unit->mDigitalPin, OUTPUT);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
             }
             *++out = (float)newDigInInt;
         }
@@ -849,28 +818,21 @@ void DigitalIO_next_akaa_once(DigitalIO* unit, int inNumSamples) {
     float* iomode = IN(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin = (int)pinid;
-    float newmode = 0; // input
-    //   float newinput;
-
     int newDigInInt = unit->mLastDigitalIn;
     float newDigIn = (float)newDigInInt;
 
     int newDigOut = (int)in;
 
-    if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0, context->digitalChannels,
-                  newpin);
-    } else {
+    if (DigitalIO_updatePin(unit, pinid)) {
         for (unsigned int n = 0; n < inNumSamples; n++) {
             // 	  newinput = in[n];
-            newmode = iomode[n];
+            float newmode = iomode[n];
             if (newmode < 0.5) {
-                pinModeOnce(context, n, newpin, INPUT);
-                newDigInInt = digitalRead(context, n, newpin);
+                pinModeOnce(context, n, unit->mDigitalPin, INPUT);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
             } else {
-                pinModeOnce(context, n, newpin, OUTPUT);
-                digitalWriteOnce(context, n, newpin, newDigOut);
+                pinModeOnce(context, n, unit->mDigitalPin, OUTPUT);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
             }
             // always write to the output of the UGen
             *++out = (float)newDigInInt;
@@ -890,31 +852,24 @@ void DigitalIO_next_akak_once(DigitalIO* unit, int inNumSamples) {
     float iomode = IN0(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin = (int)pinid;
-    float newmode = 0; // input
-    //   float newinput;
-
     int newDigInInt = unit->mLastDigitalIn;
     float newDigIn = (float)newDigInInt;
 
     int newDigOut = (int)in;
 
-    if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0, context->digitalChannels,
-                  newpin);
-    } else {
+    if (DigitalIO_updatePin(unit, pinid)) {
         if (iomode < 0.5) {
-            pinMode(context, 0, newpin, INPUT);
+            pinMode(context, 0, unit->mDigitalPin, INPUT);
             for (unsigned int n = 0; n < inNumSamples; n++) {
-                newDigInInt = digitalRead(context, n, newpin);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
                 // always write to the output of the UGen
                 *++out = (float)newDigInInt;
             }
         } else {
-            pinMode(context, 0, newpin, OUTPUT);
+            pinMode(context, 0, unit->mDigitalPin, OUTPUT);
             for (unsigned int n = 0; n < inNumSamples; n++) {
                 newDigOut = (int)in[n];
-                digitalWriteOnce(context, n, newpin, newDigOut);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
                 // always write to the output of the UGen
                 *++out = (float)newDigInInt;
             }
@@ -935,32 +890,28 @@ void DigitalIO_next_akka_once(DigitalIO* unit, int inNumSamples) {
     float* iomode = IN(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin = (int)pinid;
     float newinput = in;
-
-    float newmode = 0; // input
 
     int newDigInInt = unit->mLastDigitalIn;
     int newDigOut = unit->mLastDigitalOut;
 
-    if ((newpin < 0) || (newpin >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0, context->digitalChannels,
-                  newpin);
-    }
+    bool shouldDo = DigitalIO_updatePin(unit, pinid);
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        newmode = iomode[n];
-        if (newmode < 0.5) { // digital read
-            pinModeOnce(context, n, newpin, INPUT);
-            newDigInInt = digitalRead(context, n, newpin);
-        } else { // digital write
-            pinModeOnce(context, n, newpin, OUTPUT);
-            if (newinput > 0.5) {
-                newDigOut = 1;
-            } else {
-                newDigOut = 0;
+        if(shouldDo) {
+            float newmode = iomode[n];
+            if (newmode < 0.5) { // digital read
+                pinModeOnce(context, n, unit->mDigitalPin, INPUT);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
+            } else { // digital write
+                pinModeOnce(context, n, unit->mDigitalPin, OUTPUT);
+                if (newinput > 0.5) {
+                    newDigOut = 1;
+                } else {
+                    newDigOut = 0;
+                }
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
             }
-            digitalWriteOnce(context, n, newpin, newDigOut);
         }
         // always write to the output of the UGen
         *++out = (float)newDigInInt;
@@ -980,33 +931,28 @@ void DigitalIO_next_ak(DigitalIO* unit, int inNumSamples) {
     float iomode = IN0(2); // IO mode : < 0.5 = input, else output
     float* out = ZOUT(0); // output value = last output value
 
-    int newpin = (int)pinid;
-
     int newDigInInt = unit->mLastDigitalIn;
     float newDigIn = (float)newDigInInt;
     int newDigOut = (int)in;
 
-    if ((pinid < 0) || (pinid >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0, context->digitalChannels,
-                  newpin);
-    } else {
+    if (DigitalIO_updatePin(unit, pinid)) {
         if (iomode < 0.5) {
-            pinMode(context, 0, newpin, INPUT);
+            pinMode(context, 0, unit->mDigitalPin, INPUT);
             for (unsigned int n = 0; n < inNumSamples; n++) {
                 // read input
-                newDigInInt = digitalRead(context, n, newpin);
+                newDigInInt = digitalRead(context, n, unit->mDigitalPin);
                 // always write to the output of the UGen
                 *++out = (float)newDigInInt;
             }
         } else {
-            pinMode(context, 0, newpin, OUTPUT);
+            pinMode(context, 0, unit->mDigitalPin, OUTPUT);
             for (unsigned int n = 0; n < inNumSamples; n++) {
                 if (in > 0.5) {
                     newDigOut = 1;
                 } else {
                     newDigOut = 0;
                 }
-                digitalWriteOnce(context, n, newpin, newDigOut);
+                digitalWriteOnce(context, n, unit->mDigitalPin, newDigOut);
                 // always write to the output of the UGen
                 *++out = (float)newDigInInt;
             }
@@ -1024,26 +970,22 @@ void DigitalIO_next_kk(DigitalIO* unit, int inNumSamples) {
     int pinid = (int)IN0(0);
     float in = IN0(1); // input value
     float iomode = IN0(2); // IO mode : < 0.5 = input, else output
-    //   float *out = ZOUT(0); // output value = last output value
 
     int newDigInInt = unit->mLastDigitalIn;
     int newDigOut = unit->mLastDigitalOut;
 
-    if ((pinid < 0) || (pinid >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalIO warning: digital pin must be between %i and %i, it is %i \n", 0, context->digitalChannels,
-                  pinid);
-    } else {
+    if (DigitalIO_updatePin(unit, pinid)) {
         if (iomode < 0.5) {
-            pinMode(context, 0, pinid, INPUT);
-            newDigInInt = digitalRead(context, 0, pinid);
+            pinMode(context, 0, unit->mDigitalPin, INPUT);
+            newDigInInt = digitalRead(context, 0, unit->mDigitalPin);
         } else {
-            pinMode(context, 0, pinid, OUTPUT);
+            pinMode(context, 0, unit->mDigitalPin, OUTPUT);
             if (in > 0.5) {
                 newDigOut = 1;
             } else {
                 newDigOut = 0;
             }
-            digitalWrite(context, 0, pinid, newDigOut);
+            digitalWrite(context, 0, unit->mDigitalPin, newDigOut);
         }
     }
     ZOUT0(0) = (float)newDigInInt;
@@ -1055,6 +997,7 @@ void DigitalIO_next_kk(DigitalIO* unit, int inNumSamples) {
 void DigitalIO_Ctor(DigitalIO* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
+    unit->mDigitalPin = 0;
     unit->mLastDigitalIn = 0;
     unit->mLastDigitalOut = 0;
 
