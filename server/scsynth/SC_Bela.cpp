@@ -27,6 +27,7 @@
 #include "SC_HiddenWorld.h"
 #include "SC_WorldOptions.h"
 #include "SC_Time.hpp"
+#include "SC_BelaScope.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -75,6 +76,7 @@ public:
     virtual ~SC_BelaDriver();
 
     void BelaAudioCallback(BelaContext* belaContext);
+    bool BelaSetup(BelaContext* belaContext);
     void SignalReceived(int);
     static int countInstances;
 
@@ -112,15 +114,24 @@ SC_BelaDriver::~SC_BelaDriver() {
     scprintf("SC_BelaDriver: >>Bela_cleanupAudio\n");
     --countInstances;
     mBelaDriverInstance = 0;
+    if (mWorld->mBelaScope)
+        delete mWorld->mBelaScope;
 }
 
 static float gBelaSampleRate;
+
 // Return true on success; returning false halts the program.
+bool SC_BelaDriver::BelaSetup(BelaContext* belaContext) {
+    gBelaSampleRate = belaContext->audioSampleRate;
+    if (mWorld->mBelaMaxScopeChannels > 0)
+        mWorld->mBelaScope = new BelaScope(mWorld->mBelaMaxScopeChannels, gBelaSampleRate, belaContext->audioFrames);
+    return true;
+}
+
 bool sc_belaSetup(BelaContext* belaContext, void* userData) {
     // cast void pointer
-    // SC_BelaDriver *belaDriver = (SC_BelaDriver*) userData;
-    gBelaSampleRate = belaContext->audioSampleRate;
-    return true;
+    SC_BelaDriver* belaDriver = (SC_BelaDriver*)userData;
+    return belaDriver->BelaSetup(belaContext);
 }
 
 void sc_belaRender(BelaContext* belaContext, void* userData) {
@@ -290,6 +301,10 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             // advance OSC time
             mOSCbuftime = oscTime = nextTime;
         }
+
+        if (mWorld->mBelaScope)
+            mWorld->mBelaScope->logBuffer();
+
     } catch (std::exception& exc) {
         scprintf("SC_BelaDriver: exception in real time: %s\n", exc.what());
     } catch (...) {
@@ -453,10 +468,11 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
 
     scprintf("SC_BelaDriver: >>DriverSetup - Running on PRU (%i)\nConfigured with \n (%i) analog input and (%i) analog "
              "output channels, (%i) digital channels, and (%i) multiplexer channels.\n HeadphoneLevel (%f dB), "
-             "pga_gain_left (%f dB) and pga_gain_right (%f dB)\n DAC Level (%f dB), ADC Level (%f dB)\n",
+             "pga_gain_left (%f dB) and pga_gain_right (%f dB)\n DAC Level (%f dB), ADC Level (%f dB) "
+             "oscilloscope channels (%i)\n",
              settings->pruNumber, settings->numAnalogInChannels, settings->numAnalogOutChannels,
              settings->numDigitalChannels, settings->numMuxChannels, settings->headphoneLevel, settings->pgaGain[0],
-             settings->pgaGain[1], settings->dacLevel, settings->adcLevel);
+             settings->pgaGain[1], settings->dacLevel, settings->adcLevel, mWorld->mBelaMaxScopeChannels);
     if (settings->beginMuted == 1) {
         scprintf("Speakers are muted.\n");
     } else {
