@@ -5,23 +5,11 @@ BelaScope {
 
 	// public interface
 
-	*scope { |channelOffset, signals, server|
-		server ?? {
-			var servers = serverScopes.keys.asArray;
-			server = servers.first;
-			if(servers.size > 1) {
-				warn("BelaScope: server not specified, using '%', but more options are available")
-			}
-		};
-		server = server ? Server.default;
-		^this.getInstance(server).scope(channelOffset, signals);
-	}
+	*scope { |channelOffset, signals|
 
-	scope { |channelOffset, signals|
+		var ugens = this.prInputAsAudioRateUGens(signals);
 
-		var ugens = this.class.prInputAsAudioRateUGens(signals);
-
-		if(ugens.notNil and: this.prIsValidScopeChannel(channelOffset, signals)) {
+		ugens !? {
 			BelaScopeOut.ar(channelOffset, ugens);
 		};
 
@@ -32,48 +20,16 @@ BelaScope {
 		var server, belaScope;
 		target = target.asTarget;
 		server = target.server;
-		belaScope = this.getInstance(server);
-		if(belaScope.prIsValidScopeChannel(channelOffset, busindex+(0..numChannels))) {
-			if(rate == \audio) {
-				^SynthDef(\belaScope_monitor_ar_bus) {
-					BelaScopeOut.ar(channelOffset, InFeedback.ar(busindex, numChannels))
-				}.play(target, addAction: \addAfter)
-			} {
-				^SynthDef(\belaScope_monitor_kr_bus) {
-					BelaScopeOut.ar(channelOffset, K2A.ar(In.kr(busindex, numChannels)))
-				}.play(target, addAction: \addAfter)
-			}
+		if(rate == \audio) {
+			^SynthDef(\belaScope_monitor_ar_bus) {
+				BelaScopeOut.ar(channelOffset, InFeedback.ar(busindex, numChannels))
+			}.play(target, addAction: \addAfter)
+		} {
+			^SynthDef(\belaScope_monitor_kr_bus) {
+				BelaScopeOut.ar(channelOffset, K2A.ar(In.kr(busindex, numChannels)))
+			}.play(target, addAction: \addAfter)
 		}
 	}
-
-	// instance creation
-
-	*initClass {
-		serverScopes = IdentityDictionary[];
-	}
-
-	*new { |server|
-		^this.getInstance(server);
-	}
-
-	*getInstance { |server|
-		server = server ? Server.default;
-		serverScopes[server] ?? {
-			serverScopes[server] = super.newCopyArgs(server).init;
-		}
-		^serverScopes[server];
-	}
-
-	init {
-		if(this.maxChannels <= 0) {
-			Error(
-				"BelaScope: can't instantiate on server '%' because its option belaMaxScopeChannels is %"
-				.format(server, this.maxChannels)
-			).throw;
-		};
-	}
-
-	maxChannels { ^this.server.options.belaMaxScopeChannels }
 
 	// scope input checks
 
@@ -100,35 +56,17 @@ BelaScope {
 		}
 	}
 
-	prIsValidScopeChannel { |channelOffset, signals=#[]|
-		if(channelOffset.isNumber.not) {
-			warn("BelaScope: channel offset must be a number, but (%) is provided.".format(channelOffset));
-			^false;
-		};
-		if(channelOffset < 0) {
-			warn("BelaScope: channel offset must be a positive number, but (%) is provided.".format(channelOffset));
-			^false;
-		};
-		if(channelOffset + signals.asArray.size > this.maxChannels){
-			warn(
-				"BelaScope: can't scope this signal to scope channel (%), max number of channels (%) exceeded.\nSignal: %"
-				.format(channelOffset, this.maxChannels, signals)
-			);
-			^false;
-		};
-		^true;
-	}
 }
 
 + UGen {
-	belaScope { |scopeChannel, server|
-		^BelaScope.scope(scopeChannel, this, server)
+	belaScope { |scopeChannel|
+		^BelaScope.scope(scopeChannel, this)
 	}
 }
 
 + Array {
 	belaScope { |scopeChannel, server|
-		^BelaScope.scope(scopeChannel, this, server)
+		^BelaScope.scope(scopeChannel, this)
 	}
 }
 

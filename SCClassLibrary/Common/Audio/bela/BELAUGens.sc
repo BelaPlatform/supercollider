@@ -109,4 +109,17 @@ BelaScopeOut : AbstractOut {
     }
     *numFixedArgs { ^1 }
     writesToBus { ^false }
+
+    checkValidInputs {
+        var valid = super.checkValidInputs;
+        var channelOffset = inputs.first;
+        valid !? { ^valid };
+
+        if(channelOffset.isNumber) {
+            if(channelOffset >= 0) {
+                ^nil;
+            }
+        };
+        ^"arg: channelOffset must be a positive number, but % is provided.".format(channelOffset);
+    }
 }

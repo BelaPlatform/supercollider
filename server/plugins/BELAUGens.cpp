@@ -1226,14 +1226,16 @@ void BelaScopeOut_Ctor(BelaScopeOut* unit) {
         BelaUgen_disable(unit);
         return;
     };
-    unit->offset = ZIN0(0);
+
+    int offset = static_cast<int>(ZIN0(0));
+    unit->offset = static_cast<unsigned int>(offset < 0 ? 0 : offset);
     uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
     uint32 numInputSignals = unit->mNumInputs - 1;
-    if (numInputSignals > maxScopeChannels - offset) {
+    if (numInputSignals > maxScopeChannels - unit->offset) {
         rt_fprintf(stderr, "BelaScopeOut warning: can't scope %i channels starting from %i, maxBelaScopeChannels is set to %i\n",
                    numInputSignals, offset, maxScopeChannels);
     }
-    unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels - offset);
+    unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels - unit->offset);
     if (unit->numScopeChannels <= 0) {
         BelaUgen_disable(unit);
     } else {
