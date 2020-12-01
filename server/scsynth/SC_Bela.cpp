@@ -27,6 +27,7 @@
 #include "SC_HiddenWorld.h"
 #include "SC_WorldOptions.h"
 #include "SC_Time.hpp"
+#include "SC_BelaScope.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -75,10 +76,9 @@ public:
     virtual ~SC_BelaDriver();
 
     void BelaAudioCallback(BelaContext* belaContext);
+    bool BelaSetup(BelaContext* belaContext);
     void SignalReceived(int);
     static int countInstances;
-    Scope* mBelaScope;
-    int mBelaMaxScopeChannels;
 
 private:
     uint32 mSCBufLength;
@@ -106,8 +106,6 @@ SC_BelaDriver::SC_BelaDriver(struct World* inWorld): SC_AudioDriver(inWorld) {
                 countInstances);
         exit(1);
     }
-    mBelaScope = inWorld->mBelaScope;
-    mBelaMaxScopeChannels = inWorld->mBelaMaxScopeChannels;
 }
 
 SC_BelaDriver::~SC_BelaDriver() {
@@ -116,17 +114,24 @@ SC_BelaDriver::~SC_BelaDriver() {
     scprintf("SC_BelaDriver: >>Bela_cleanupAudio\n");
     --countInstances;
     mBelaDriverInstance = 0;
+    if (mWorld->mBelaScope)
+        delete mWorld->mBelaScope;
 }
 
 static float gBelaSampleRate;
+
 // Return true on success; returning false halts the program.
+bool SC_BelaDriver::BelaSetup(BelaContext* belaContext) {
+    gBelaSampleRate = belaContext->audioSampleRate;
+    if (mWorld->mBelaMaxScopeChannels > 0)
+        mWorld->mBelaScope = new BelaScope(mWorld->mBelaMaxScopeChannels, gBelaSampleRate, belaContext->audioFrames);
+    return true;
+}
+
 bool sc_belaSetup(BelaContext* belaContext, void* userData) {
     // cast void pointer
     SC_BelaDriver* belaDriver = (SC_BelaDriver*)userData;
-    gBelaSampleRate = belaContext->audioSampleRate;
-    if (belaDriver->mBelaScope)
-        belaDriver->mBelaScope->setup(belaDriver->mBelaMaxScopeChannels, gBelaSampleRate);
-    return true;
+    return belaDriver->BelaSetup(belaContext);
 }
 
 void sc_belaRender(BelaContext* belaContext, void* userData) {
@@ -296,6 +301,10 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             // advance OSC time
             mOSCbuftime = oscTime = nextTime;
         }
+
+        if (mWorld->mBelaScope)
+            mWorld->mBelaScope->logBuffer();
+
     } catch (std::exception& exc) {
         scprintf("SC_BelaDriver: exception in real time: %s\n", exc.what());
     } catch (...) {

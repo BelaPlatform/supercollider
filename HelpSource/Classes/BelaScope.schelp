@@ -16,8 +16,16 @@ list::
 ## an instance of Server running on a Bela (either locally or remotely). 
 
 ## ServerOptions.belaMaxScopeChannels should be set > 0 for Bela's server. 
-It represents the maximum number of channels that is possible to scope on that server, and causes bus and resources allocation. 
+It represents the maximum number of channels that is possible to scope on that server, and affects resources allocation. 
 If set <= 0, the server won't instantiate any Scope object, and any attempt to instantiate a BelaScope from sclang will throw an error.
+::
+
+note:: 
+When controlling a remote Bela server, it is necessary to manually set its code::belaMaxScopeChannels:: to the corresponding value set on the Bela when the server was booted:
+code::
+// Example:
+~belaServer = Server.remote(\bela, NetAddr("192.168.6.2", 57110), ServerOptions().belaMaxScopeChannels_(4));
+::
 ::
 
 subsection:: Usage
@@ -63,6 +71,8 @@ Number of bus channels to scope
 argument::target
 Bela's SuperCollider server, or any node on that server. The bus is monitored strong::after:: this target, or after this server's link::Classes/RootNode:: if a server is provided as target.
 
+returns:: A link::Class/Synth:: used to monitor the bus. 
+
 code::
 // scope 2 channels from audio bus 4 on Bela Oscilloscope's channel 3
 BelaScope.monitorBus(3, 4, 2, ~belaServer)
@@ -88,15 +98,16 @@ argument::busindex
 Index of the audio bus to scope
 argument::numChannels
 Number of bus channels to scope
+returns:: the array of code::signals:: passed in as an argument. This allows for transparent usage of code::.belaScope():: in processing chains
 
 method:: maxChannels
 returns:: Maximum number of oscilloscope channels, as set up by ServerOptions.maxBelaScopeChannels
+
 Examples::
 
 code::
 ~belaServer = Server.remote(\bela, NetAddr("192.168.6.2", 57110));
 ~belaServer.options.maxBelaScopeChannels = 8;
-~belaServer.reboot;
 
 // UGens: usage like .poll
 // scope the LFNoise0, and still use it to modulate a SinOsc

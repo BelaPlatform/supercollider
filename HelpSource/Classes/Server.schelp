@@ -769,4 +769,4 @@ This server's bus index to scope. Defaults to 0.
 argument:: numChannels
 Number of channels to send to BelaScope, starting from the index supplied. Defaults to 2, or to link::Classes/ServerOptions#-numOutputBusChannels:: if index is 0.
 
-returns:: A link::Classes/Monitor::, linking this Server's desired bus channels to BelaScope's bus.
+returns:: A link::Classes/Synth::, linking this Server's desired bus channels to BelaScope's bus.

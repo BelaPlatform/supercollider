@@ -22,23 +22,29 @@ BelaScope {
 		var ugens = this.class.prInputAsAudioRateUGens(signals);
 
 		if(ugens.notNil and: this.prIsValidScopeChannel(channelOffset, signals)) {
-			Out.ar(this.bus.index + channelOffset, ugens);
+			BelaScopeOut.ar(channelOffset, ugens);
 		};
 
 		^signals;
 	}
 
-	*monitorBus { |channelOffset, busindex, numChannels, target|
+	*monitorBus { |channelOffset, busindex, numChannels, target, rate = \audio|
 		var server, belaScope;
 		target = target.asTarget;
 		server = target.server;
 		belaScope = this.getInstance(server);
 		if(belaScope.prIsValidScopeChannel(channelOffset, busindex+(0..numChannels))) {
-			^Monitor().play(busindex, numChannels, belaScope.bus.index + channelOffset, numChannels, target, addAction:\addAfter);
+			if(rate == \audio) {
+				^SynthDef(\belaScope_monitor_ar_bus) {
+					BelaScopeOut.ar(channelOffset, InFeedback.ar(busindex, numChannels))
+				}.play(target, addAction: \addAfter)
+			} {
+				^SynthDef(\belaScope_monitor_kr_bus) {
+					BelaScopeOut.ar(channelOffset, K2A.ar(In.kr(busindex, numChannels)))
+				}.play(target, addAction: \addAfter)
+			}
 		}
 	}
-
-	maxChannels { ^this.server.options.belaMaxScopeChannels }
 
 	// instance creation
 
@@ -65,50 +71,9 @@ BelaScope {
 				.format(server, this.maxChannels)
 			).throw;
 		};
-		ServerBoot.add(this, this.server);
-		ServerTree.add(this, this.server);
-		if(this.server.serverRunning){
-				this.doOnServerBoot;
-				this.doOnServerTree;
-		}
 	}
 
-	// bus and synth creation
-
-	prReserveScopeBus {
-		// TODO: check if bus is already reserved, or if maxChannels mismatch
-		bus = Bus.audio(server, this.maxChannels);
-	}
-
-	prStartScope {
-		if(node.notNil) {
-			if (node.isRunning) {
-				warn("BelaScope: can't instantiate a new BelaScopeUGen, because one is already active.");
-				^this
-			}
-		};
-
-		if(UGen.buildSynthDef.notNil) {
-			// When BelaScope.init is called inside a SynthDef function (e.g. by UGen:belaScope),
-			// this.prStartSynth breaks that SynthDef:build, because it attempts to create an inner SynthDef.
-			// Fixed by forking.
-			fork{ this.prStartSynth };
-		} {
-			this.prStartSynth;
-		}
-
-	}
-
-	prStartSynth {
-		node = SynthDef(\bela_stethoscope) {
-			BelaScopeUGen.ar(this.bus, this.maxChannels);
-		}
-		.play(this.server, addAction: \addAfter)
-		.register;
-	}
-
-	doOnServerBoot { this.prReserveScopeBus; ServerBoot.remove(this) }
-	doOnServerTree { this.prStartScope; ServerTree.remove(this) }
+	maxChannels { ^this.server.options.belaMaxScopeChannels }
 
 	// scope input checks
 
@@ -169,7 +134,7 @@ BelaScope {
 
 + Bus {
 	belaScope { |scopeChannel|
-		^BelaScope.monitorBus(scopeChannel, index, numChannels);
+		^BelaScope.monitorBus(scopeChannel, index, numChannels, rate: rate);
 	}
 }
 

@@ -1197,63 +1197,54 @@ void DigitalIO_Ctor(DigitalIO* unit) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct BelaScopeUGen : public Unit {
-    static unsigned int instanceCount;
-
-    Scope* belaScope;
-    float* frameData;
-    unsigned int noScopeChannels;
+struct BelaScopeOut : public Unit {
     unsigned int maxScopeChannels;
+    unsigned int numScopeChannels;
+    unsigned int offset;
+    unsigned int scopeBufferSamples;
 };
 
-unsigned int BelaScopeUGen::instanceCount = 0;
-
-void BelaScopeUGen_next(BelaScopeUGen* unit, unsigned int numSamples) {
-    unsigned int numChannels = unit->noScopeChannels;
+void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
+    float* scopeBuffer = unit->mWorld->mBelaScope->buffer;
+    if (!scopeBuffer)
+        return;
+    unsigned int numChannels = unit->numScopeChannels;
     unsigned int maxChannels = unit->maxScopeChannels;
-    float* frameData = unit->frameData;
-    float* inputPointers[maxChannels];
+    unsigned int scopeBufferSamples = unit->scopeBufferSamples;
+    float* inputPointers[numChannels];
     for (unsigned int ch = 0; ch < numChannels; ++ch)
-        inputPointers[ch] = ZIN(ch);
+        inputPointers[ch] = ZIN(ch + 1);
 
-    LOOP1(numSamples, for (unsigned int ch = 0; ch < numChannels; ++ch) frameData[ch] = ZXP(inputPointers[ch]);
-          for (unsigned int ch = numChannels; ch < maxChannels; ++ch) frameData[ch] = 0.0;
-          unit->belaScope->log(frameData);)
+    for (unsigned int frame = unit->offset; frame < scopeBufferSamples; frame += maxChannels)
+        for (unsigned int ch = 0; ch < numChannels; ++ch)
+            scopeBuffer[frame + ch] += ZXP(inputPointers[ch]);
+    unit->mWorld->mBelaScope->touched = true;
 }
 
-void BelaScopeUGen_noop(unsigned int numFrames) { /* no-op */
+void BelaScopeOut_noop(BelaScopeOut* unit) { /*noop*/
 }
 
-void BelaScopeUGen_Ctor(BelaScopeUGen* unit) {
-    uint32 numInputs = unit->mNumInputs;
-    uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
-    if (numInputs > maxScopeChannels) {
-        rt_fprintf(stderr,
-                   "BelaScopeUGen warning: can't initialise scope %i channels, maxBelaScopeChannels is set to %i\n",
-                   numInputs, maxScopeChannels);
-    }
-    BelaScopeUGen::instanceCount++;
-    if (BelaScopeUGen::instanceCount > 1) {
-        rt_fprintf(
-            stderr,
-            "BelaScopeUGen warning: creating a new instance when one is already active. This one will do nothing.\n");
-        SETCALC(BelaScopeUGen_noop);
+void BelaScopeOut_Ctor(BelaScopeOut* unit) {
+    BelaScope* scope = unit->mWorld->mBelaScope;
+    if (!scope || !scope->buffer) {
+        rt_fprintf(stderr, "BelaScopeOut error: Scope not initialized on server\n");
+        SETCALC(BelaScopeOut_noop);
         return;
     };
-    unit->noScopeChannels = sc_min(numInputs, maxScopeChannels);
+    unit->offset = ZIN0(0);
+    unit->scopeBufferSamples = unit->mWorld->mBelaScope->bufferSamples;
+    uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
+    uint32 numInputSignals = unit->mNumInputs - 1;
+    unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels);
     unit->maxScopeChannels = maxScopeChannels;
-    unit->frameData = (float*)RTAlloc(unit->mWorld, sizeof(float) * unit->noScopeChannels);
-    unit->belaScope = unit->mWorld->mBelaScope;
-    // initiate first sample
-    BelaScopeUGen_next(unit, 1);
-    // set calculation method
-    SETCALC(BelaScopeUGen_next);
-}
+    // TODO: check valid offset
+    if (numInputSignals > maxScopeChannels) {
+        rt_fprintf(stderr, "BelaScopeOut warning: can't scope %i channels, maxBelaScopeChannels is set to %i\n",
+                   numInputSignals, maxScopeChannels);
+    }
 
-void BelaScopeUGen_Dtor(BelaScopeUGen* unit) {
-    if (unit->frameData)
-        RTFree(unit->mWorld, unit->frameData);
-    BelaScopeUGen::instanceCount--;
+    BelaScopeOut_next(unit, 1);
+    SETCALC(BelaScopeOut_next);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1267,7 +1258,7 @@ PluginLoad(BELA) {
     DefineSimpleUnit(DigitalIn);
     DefineSimpleUnit(DigitalOut);
     DefineSimpleUnit(DigitalIO);
-    DefineDtorUnit(BelaScopeUGen);
+    DefineSimpleUnit(BelaScopeOut);
 }
 
 

@@ -97,14 +97,16 @@ DigitalIO : UGen {
     }
 }
 
-/* input 1: bus
- * input 2: number of channels to scope
+/* input 1: channel offset
+ * input 2: array of signals to scope
  */
-BelaScopeUGen : AbstractOut {
-    *ar { arg busnum, numChannels;
-       super.performList('new1', 'audio', In.ar(busnum, numChannels));
-       ^0.0;    // BelaScopeUGen has no outputs
+BelaScopeOut : AbstractOut {
+    *ar {
+        arg offset = 0, channelsArray;
+        channelsArray = this.replaceZeroesWithSilence(channelsArray.asUGenInput(this).asArray);
+        this.multiNewList(['audio', offset] ++ channelsArray)
+        ^0.0
     }
-    *numFixedArgs { ^0 }
+    *numFixedArgs { ^1 }
     writesToBus { ^false }
 }

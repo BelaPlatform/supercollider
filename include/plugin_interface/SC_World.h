@@ -23,7 +23,7 @@
 
 #ifdef BELA
 #    include "Bela.h"
-#    include "libraries/Scope/Scope.h"
+#    include "../server/scsynth/SC_BelaScope.h"
 #endif
 
 #include "SC_Types.h"
@@ -111,7 +111,7 @@ struct World {
 
 #ifdef BELA
     BelaContext* mBelaContext;
-    Scope* mBelaScope;
+    BelaScope* mBelaScope;
     uint32 mBelaMaxScopeChannels;
     uint32 mBelaAnalogInputChannels;
     uint32 mBelaAnalogOutputChannels;
