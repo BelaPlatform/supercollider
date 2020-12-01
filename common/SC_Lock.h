@@ -25,13 +25,20 @@
 #include <mutex>
 #include <thread>
 
+#ifdef __COBALT__
+#    include <XenomaiLock.h>
+typedef XenomaiMutex SC_Lock;
+#else // __COBALT__
 typedef std::mutex SC_Lock;
+#endif // __COBALT__
 typedef std::thread SC_Thread;
 using std::cv_status;
 using std::lock_guard;
-using std::mutex;
 using std::timed_mutex;
 using std::unique_lock;
+#ifdef __COBALT__
+typedef XenomaiConditionVariable condition_variable_any;
+#else // __COBALT__
 typedef std::condition_variable_any condition_variable_any;
-
+#endif // __COBALT__
 typedef SC_Lock mutex;

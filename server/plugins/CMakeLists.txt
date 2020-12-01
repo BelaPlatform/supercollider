@@ -160,6 +160,9 @@ add_library(ML_UGens MODULE
 if(NOT NO_LIBSNDFILE)
 	set(diskio_sources DiskIO_UGens.cpp)
 
+	if (XENOMAI_FOUND)
+		list(APPEND diskio_sources ../../common/XenomaiLock.cpp)
+	endif()
 	add_library(DiskIO_UGens MODULE ${diskio_sources})
 
 	if(SNDFILE_FOUND)

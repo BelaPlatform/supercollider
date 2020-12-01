@@ -78,18 +78,13 @@ public:
     void BelaAudioCallback(BelaContext* belaContext);
     bool BelaSetup(BelaContext* belaContext);
     void SignalReceived(int);
-    static void staticMAudioSyncSignal(void*);
-    static AuxiliaryTask mAudioSyncSignalTask;
     static int countInstances;
-    static SC_SyncCondition* staticMAudioSync;
 
 private:
     uint32 mSCBufLength;
 };
 
-AuxiliaryTask SC_BelaDriver::mAudioSyncSignalTask;
 int SC_BelaDriver::countInstances;
-SC_SyncCondition* SC_BelaDriver::staticMAudioSync;
 SC_BelaDriver* mBelaDriverInstance = 0;
 
 SC_AudioDriver* SC_NewAudioDriver(struct World* inWorld) {
@@ -105,7 +100,6 @@ SC_BelaDriver::SC_BelaDriver(struct World* inWorld): SC_AudioDriver(inWorld) {
     mStartHostSecs = 0;
     mSCBufLength = inWorld->mBufLength;
 
-    staticMAudioSync = &mAudioSync;
     ++countInstances;
     if (countInstances != 1) {
         fprintf(stderr, "Error: there are %d instances of SC_BelaDriver running at the same time. Exiting\n",
@@ -317,15 +311,9 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
         scprintf("SC_BelaDriver: unknown exception in real time\n");
     }
 
-    // this avoids Xenomai mode switches in the audio thread ...
-    Bela_scheduleAuxiliaryTask(mAudioSyncSignalTask);
+    mAudioSync.Signal();
 }
 
-void SC_BelaDriver::staticMAudioSyncSignal(void*) {
-    // ... but mode switches are still happening here, in a lower priority thread.
-    // FIXME: this triggers a mode switch in Xenomai.
-    staticMAudioSync->Signal();
-}
 // ====================================================================
 
 // HW_DETECT_HACK: these functionalities should instead be exposed by libbela
@@ -499,12 +487,6 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     if (Bela_initAudio(settings, this) != 0) {
         scprintf("Error in SC_BelaDriver::DriverSetup(): unable to initialise audio\n");
         return false;
-    }
-    mAudioSyncSignalTask = Bela_createAuxiliaryTask(
-        staticMAudioSyncSignal, 90, "mAudioSyncSignalTask"); // needs to be created after the call to Bela_initAudio()
-    if (!mAudioSyncSignalTask) {
-        fprintf(stderr, "Error: unable to create Bela auxiliary task\n");
-        exit(1);
     }
 
     *outNumSamples = settings->periodSize;
