@@ -1205,6 +1205,59 @@ void DigitalIO_Ctor(DigitalIO* unit) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct BelaScopeOut : public Unit {
+    unsigned int numScopeChannels;
+    unsigned int offset;
+};
+
+void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
+    float* scopeBuffer = unit->mWorld->mBelaScope->buffer;
+    if (!scopeBuffer)
+        return;
+    unsigned int numChannels = unit->numScopeChannels;
+    unsigned int maxChannels = unit->mWorld->mBelaMaxScopeChannels;
+    unsigned int scopeBufferSamples = unit->mWorld->mBelaScope->bufferSamples;
+    float* inputPointers[numChannels];
+    // input 0: channelOffset
+    // inputs 1 to numInputs-1 : signal inputs
+    for (unsigned int ch = 0; ch < numChannels; ++ch)
+        inputPointers[ch] = ZIN(ch + 1); // skip ZIN(0)
+
+    for (unsigned int frame = unit->offset; frame < scopeBufferSamples; frame += maxChannels)
+        for (unsigned int ch = 0; ch < numChannels; ++ch)
+            scopeBuffer[frame + ch] += ZXP(inputPointers[ch]);
+    unit->mWorld->mBelaScope->touched = true;
+}
+
+void BelaScopeOut_Ctor(BelaScopeOut* unit) {
+    BelaScope* scope = unit->mWorld->mBelaScope;
+    if (!scope || !scope->buffer) {
+        rt_fprintf(stderr, "BelaScopeOut error: Scope not initialized on server\n");
+        BelaUgen_disable(unit);
+        return;
+    };
+
+    int offset = static_cast<int>(ZIN0(0));
+    unit->offset = static_cast<unsigned int>(offset < 0 ? 0 : offset);
+    uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
+    uint32 numInputSignals = unit->mNumInputs - 1;
+    if (numInputSignals > maxScopeChannels - unit->offset) {
+        rt_fprintf(
+            stderr,
+            "BelaScopeOut warning: can't scope %i channels starting from %i, maxBelaScopeChannels is set to %i\n",
+            numInputSignals, offset, maxScopeChannels);
+    }
+    unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels - unit->offset);
+    if (unit->numScopeChannels <= 0) {
+        BelaUgen_disable(unit);
+    } else {
+        BelaScopeOut_next(unit, 1);
+        SETCALC(BelaScopeOut_next);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 PluginLoad(BELA) {
     ft = inTable;
 
@@ -1214,6 +1267,7 @@ PluginLoad(BELA) {
     DefineSimpleUnit(DigitalIn);
     DefineSimpleUnit(DigitalOut);
     DefineSimpleUnit(DigitalIO);
+    DefineSimpleUnit(BelaScopeOut);
 }
 
 

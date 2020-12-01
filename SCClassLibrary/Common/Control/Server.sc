@@ -70,6 +70,7 @@ ServerOptions {
 	var <>adcLevel;
 	var <>numMultiplexChannels;
 	var <>belaPRU;
+	var <>belaMaxScopeChannels;
 
 	*initClass {
 		defaultValues = IdentityDictionary.newFrom(
@@ -125,6 +126,7 @@ ServerOptions {
 				adcLevel: 0,
 				numMultiplexChannels: 0,
 				belaPRU: 1,
+				belaMaxScopeChannels: 0,
 			)
 		)
 	}
@@ -287,6 +289,9 @@ ServerOptions {
 		});
 		if (belaPRU.notNil, {
 			o = o ++ " -T " ++ belaPRU;
+		});
+		if (belaMaxScopeChannels.notNil, {
+			o = o ++ " -E " ++ belaMaxScopeChannels;
 		});
 		^o
 	}

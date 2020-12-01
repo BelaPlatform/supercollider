@@ -103,6 +103,7 @@ void Usage() {
              "   -y <bela-adc-level>\n"
              "   -g <bela-multiplexer-channels>\n"
              "   -T <bela-pru-id>\n"
+             "   -E <bela-oscilloscope-max-channels>\n"
 #endif
 #if (_POSIX_MEMLOCK - 0) >= 200112L
              "   -L enable memory locking\n"
@@ -177,16 +178,17 @@ int scsynth_main(int argc, char** argv) {
     options.mBelaDACLevel = 0;
     options.mBelaNumMuxChannels = 0;
     options.mBelaPRU = 1;
+    options.mBelaMaxScopeChannels = 0;
 #endif
 
     for (int i = 1; i < argc;) {
 #if defined(BELA)
-#    define SC_EXTRA_OPTIONS "JKGQXYAxygT"
+#    define SC_EXTRA_OPTIONS "JKGQXYAxygTE"
 #else // BELA
 #    define SC_EXTRA_OPTIONS ""
 #endif // BELA
         if (argv[i][0] != '-' || argv[i][1] == 0
-            || strchr("utBaioczblndpmwZrCNSDIOsMHvVRUhPL" EXTRA_OPTIONS, argv[i][1]) == nullptr) {
+            || strchr("utBaioczblndpmwZrCNSDIOsMHvVRUhPL" SC_EXTRA_OPTIONS, argv[i][1]) == nullptr) {
             scprintf("ERROR: Invalid option %s\n", argv[i]);
             Usage();
         }
@@ -361,6 +363,10 @@ int scsynth_main(int argc, char** argv) {
         case 'T':
             checkNumArgs(2);
             options.mBelaPRU = atoi(argv[j + 1]);
+            break;
+        case 'E':
+            checkNumArgs(2);
+            options.mBelaMaxScopeChannels = atoi(argv[j + 1]);
             break;
 #endif
         case 'V':

@@ -218,7 +218,7 @@ if (AUDIOAPI STREQUAL jack)
 elseif(AUDIOAPI STREQUAL portaudio)
 	target_link_libraries(libscsynth ${PORTAUDIO_LIBRARIES})
 elseif(AUDIOAPI STREQUAL bela)
-	target_link_libraries(libscsynth ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES})
+	target_link_libraries(libscsynth ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES} belaextra)
 elseif(AUDIOAPI STREQUAL coreaudio)
 	target_link_libraries(libscsynth "-framework CoreAudio")
 endif()
@@ -264,7 +264,7 @@ add_executable(scsynth
 target_link_libraries(scsynth libscsynth)
 
 if(AUDIOAPI STREQUAL bela)
-	target_link_libraries(scsynth ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES})
+	target_link_libraries(scsynth ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES} belaextra)
 endif()
 
 if (PTHREADS_FOUND)
