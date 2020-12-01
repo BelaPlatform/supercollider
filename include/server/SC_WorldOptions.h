@@ -86,7 +86,6 @@ struct WorldOptions {
     int mSharedMemoryID = 0;
 
 #ifdef BELA
-    // 	uint32 mBelaAnalogChannels;
     uint32 mBelaAnalogInputChannels;
     uint32 mBelaAnalogOutputChannels;
     uint32 mBelaDigitalChannels;
@@ -98,6 +97,7 @@ struct WorldOptions {
     float mBelaADCLevel;
     uint32 mBelaNumMuxChannels;
     uint32 mBelaPRU;
+    uint32 mBelaMaxScopeChannels;
 #endif
 };
 

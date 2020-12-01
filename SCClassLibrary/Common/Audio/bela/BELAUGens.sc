@@ -96,3 +96,30 @@ DigitalIO : UGen {
         ^this.multiNew('control', digitalPin, output, pinMode ).madd(mul,add)
     }
 }
+
+/* input 1: channel offset
+ * input 2: array of signals to scope
+ */
+BelaScopeOut : AbstractOut {
+    *ar {
+        arg offset = 0, channelsArray;
+        channelsArray = this.replaceZeroesWithSilence(channelsArray.asUGenInput(this).asArray);
+        this.multiNewList(['audio', offset] ++ channelsArray)
+        ^0.0
+    }
+    *numFixedArgs { ^1 }
+    writesToBus { ^false }
+
+    checkValidInputs {
+        var valid = super.checkValidInputs;
+        var channelOffset = inputs.first;
+        valid !? { ^valid };
+
+        if(channelOffset.isNumber) {
+            if(channelOffset >= 0) {
+                ^nil;
+            }
+        };
+        ^"arg: channelOffset must be a positive number, but % is provided.".format(channelOffset);
+    }
+}

@@ -423,6 +423,7 @@ World* World_New(WorldOptions* inOptions) {
         world->mBelaADCLevel = inOptions->mBelaADCLevel;
         world->mBelaNumMuxChannels = inOptions->mBelaNumMuxChannels;
         world->mBelaPRU = inOptions->mBelaPRU;
+        world->mBelaMaxScopeChannels = inOptions->mBelaMaxScopeChannels;
 #endif
 
 #ifdef __APPLE__
