@@ -23,8 +23,6 @@
  *  https://www.nescivi.eu
  */
 
-// #include <SC_Lock.h>
-
 #include <atomic>
 
 #include "Bela.h"
@@ -33,6 +31,70 @@ int rt_printf(const char* format, ...);
 int rt_fprintf(FILE* stream, const char* format, ...);
 
 #include "SC_PlugIn.h"
+#define BELA_SIMPLIFIED_DIGITALIO
+
+class AccessBuffer {
+protected:
+    AccessBuffer(float* buffer, unsigned int count): buffer(buffer), count(count), last(buffer[count - 1]) {}
+    const float& at(unsigned int n) const {
+        if (n < count)
+            return buffer[n];
+        else
+            return last;
+    }
+    float& at(unsigned int n) {
+        if (n < count)
+            return buffer[n];
+        else
+            return last;
+    }
+    float* buffer;
+    float last;
+    const unsigned int count;
+};
+
+// Two buffer views which on which you can call [] for arbitrarily large numbers, but
+// if it exceeds count, you will get back the value it had at [count-1] at
+// initialisation.
+// Additionally, upon destruction of an AccessBufferWriter object, the
+// [count-1] element wil be replaced with the cached value, which may have been
+// overwritten when assigning the returned value. This is done heuristically.
+// These classes are useful when dealing with Sc buffers transparently without
+// worrying whether they are at audio or control rate.
+// It is also safe against overlapping buffers, as long as:
+// - only one object writes to the buffer
+// - you write to elements incrementally (starting from 0)
+// - no one tries to access the buffer if not with one of the Writer or Reader
+// objects, as long as they are alive
+// - for each element, you write after reading (note: the way this provides safety is
+// that you can keep calling [n] with n >= count and you will still access the
+// valid cached value and not whathever the writer may have written to it
+// since)
+
+class AccessBufferWriter : public AccessBuffer {
+public:
+    AccessBufferWriter(float* buffer, unsigned int count): AccessBuffer(buffer, count), lastTouched(false) {};
+    ~AccessBufferWriter() {
+        // calling [], you may have been passed a reference to last instead of
+        // a pointer into the buffer itself. Here, we ensure we put it back into the buffer
+        if (lastTouched)
+            buffer[count - 1] = last;
+    }
+    float& operator[](unsigned int n) {
+        if (n > count)
+            lastTouched = true;
+        return at(n);
+    }
+
+private:
+    bool lastTouched;
+};
+
+class AccessBufferReader : public AccessBuffer {
+public:
+    AccessBufferReader(float* buffer, unsigned int count): AccessBuffer(buffer, count) {};
+    const float& operator[](unsigned int n) const { return at(n); }
+};
 
 static InterfaceTable* ft;
 
@@ -661,6 +723,65 @@ bool DigitalIO_updatePin(DigitalIO* unit, int newPin) {
     return updatePin(context->digitalChannels, newPin, &unit->mDigitalPin, "DigitalIO");
 }
 
+#ifdef BELA_SIMPLIFIED_DIGITALIO
+static int parseDigitalValue(float value) { return value > 0.5; }
+
+static int parseDigitalMode(float mode) {
+    if (mode < 0.5)
+        return INPUT;
+    else
+        return OUTPUT;
+}
+
+void DigitalIO_next_universal(DigitalIO* unit, int inNumSamples) {
+    World* world = unit->mWorld;
+    BelaContext* context = world->mBelaContext;
+    const bool ugenAudioRate = (calc_FullRate == unit->mCalcRate);
+    const bool pinAudioRate = (calc_FullRate == INRATE(0));
+    const bool inputAudioRate = (calc_FullRate == INRATE(1));
+    const bool modeAudioRate = (calc_FullRate == INRATE(2));
+
+    unsigned int outsCount = ugenAudioRate ? inNumSamples : 1;
+    unsigned int pinsCount = pinAudioRate ? inNumSamples : 1;
+    unsigned int insCount = inputAudioRate ? inNumSamples : 1;
+    unsigned int modesCount = modeAudioRate ? inNumSamples : 1;
+    AccessBufferWriter outs(OUT(0), outsCount); // may be the same as pins
+    const AccessBufferReader pins(IN(0), pinsCount);
+    const AccessBufferReader ins(IN(1), insCount);
+    const AccessBufferReader modes(IN(2), modesCount);
+
+    bool lastDigIn = unit->mLastDigitalIn;
+    // with properly initialised AccessBuffers, we can use [n] below regardless
+    // of the K/A rate of each buffer
+    for (unsigned int n = 0; n < inNumSamples; ++n) {
+        unsigned int pin = (int)pins[n];
+        if (DigitalIO_updatePin(unit, pin)) {
+            int mode = parseDigitalMode(modes[n]);
+            if (1 == inNumSamples) {
+                // we are only ever going to go up to 1 (i.e.: processed at
+                // control rate). So fill up the rest of the buffer.
+                pinMode(context, 0, unit->mDigitalPin, mode);
+            } else {
+                pinModeOnce(context, n, unit->mDigitalPin, mode);
+            }
+            if (INPUT == mode) {
+                lastDigIn = digitalRead(context, n, unit->mDigitalPin);
+            } else {
+                bool digOut = parseDigitalValue(ins[n]);
+                if (1 == inNumSamples) {
+                    // we are only ever going to go up to 1 (i.e.: processed at
+                    // control rate). So fill up the rest of the buffer.
+                    digitalWrite(context, 0, unit->mDigitalPin, digOut);
+                } else {
+                    digitalWriteOnce(context, n, unit->mDigitalPin, digOut);
+                }
+            }
+        }
+        outs[n] = lastDigIn;
+    }
+    unit->mLastDigitalIn = lastDigIn;
+}
+#else // BELA_SIMPLIFIED_DIGITALIO
 void DigitalIO_next_aaaa_once(DigitalIO* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
@@ -898,7 +1019,7 @@ void DigitalIO_next_akka_once(DigitalIO* unit, int inNumSamples) {
     bool shouldDo = DigitalIO_updatePin(unit, pinid);
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        if(shouldDo) {
+        if (shouldDo) {
             float newmode = iomode[n];
             if (newmode < 0.5) { // digital read
                 pinModeOnce(context, n, unit->mDigitalPin, INPUT);
@@ -993,6 +1114,7 @@ void DigitalIO_next_kk(DigitalIO* unit, int inNumSamples) {
     unit->mLastDigitalIn = newDigInInt;
     unit->mLastDigitalOut = newDigOut;
 }
+#endif // BELA_SIMPLIFIED_DIGITALIO
 
 void DigitalIO_Ctor(DigitalIO* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
@@ -1000,7 +1122,9 @@ void DigitalIO_Ctor(DigitalIO* unit) {
     unit->mDigitalPin = 0;
     unit->mLastDigitalIn = 0;
     unit->mLastDigitalOut = 0;
-
+#ifdef BELA_SIMPLIFIED_DIGITALIO
+    SETCALC(DigitalIO_next_universal);
+#else // BELA_SIMPLIFIED_DIGITALIO
     // set calculation method
     if (unit->mCalcRate == calc_FullRate) { // ugen running at audio rate;
         if (INRATE(0) == calc_FullRate) { // pin changed at audio rate
@@ -1075,6 +1199,7 @@ void DigitalIO_Ctor(DigitalIO* unit) {
         //             rt_printf("DigitalIO: kk\n");
         SETCALC(DigitalIO_next_kk);
     }
+#endif // BELA_SIMPLIFIED_DIGITALIO
     BelaUgen_init_output(unit);
 }
 
