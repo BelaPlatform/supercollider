@@ -1198,10 +1198,8 @@ void DigitalIO_Ctor(DigitalIO* unit) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct BelaScopeOut : public Unit {
-    unsigned int maxScopeChannels;
     unsigned int numScopeChannels;
     unsigned int offset;
-    unsigned int scopeBufferSamples;
 };
 
 void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
@@ -1209,11 +1207,11 @@ void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
     if (!scopeBuffer)
         return;
     unsigned int numChannels = unit->numScopeChannels;
-    unsigned int maxChannels = unit->maxScopeChannels;
-    unsigned int scopeBufferSamples = unit->scopeBufferSamples;
+    unsigned int maxChannels = unit->mWorld->mBelaMaxScopeChannels;
+    unsigned int scopeBufferSamples = unit->mWorld->mBelaScope->bufferSamples;
     float* inputPointers[numChannels];
     for (unsigned int ch = 0; ch < numChannels; ++ch)
-        inputPointers[ch] = ZIN(ch + 1);
+        inputPointers[ch] = ZIN(ch + 1); // skip ZIN(0), it's channelOffset
 
     for (unsigned int frame = unit->offset; frame < scopeBufferSamples; frame += maxChannels)
         for (unsigned int ch = 0; ch < numChannels; ++ch)
@@ -1221,30 +1219,27 @@ void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
     unit->mWorld->mBelaScope->touched = true;
 }
 
-void BelaScopeOut_noop(BelaScopeOut* unit) { /*noop*/
-}
-
 void BelaScopeOut_Ctor(BelaScopeOut* unit) {
     BelaScope* scope = unit->mWorld->mBelaScope;
     if (!scope || !scope->buffer) {
         rt_fprintf(stderr, "BelaScopeOut error: Scope not initialized on server\n");
-        SETCALC(BelaScopeOut_noop);
+        BelaUgen_disable(unit);
         return;
     };
     unit->offset = ZIN0(0);
-    unit->scopeBufferSamples = unit->mWorld->mBelaScope->bufferSamples;
     uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
     uint32 numInputSignals = unit->mNumInputs - 1;
-    unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels);
-    unit->maxScopeChannels = maxScopeChannels;
-    // TODO: check valid offset
-    if (numInputSignals > maxScopeChannels) {
-        rt_fprintf(stderr, "BelaScopeOut warning: can't scope %i channels, maxBelaScopeChannels is set to %i\n",
-                   numInputSignals, maxScopeChannels);
+    if (numInputSignals > maxScopeChannels - offset) {
+        rt_fprintf(stderr, "BelaScopeOut warning: can't scope %i channels starting from %i, maxBelaScopeChannels is set to %i\n",
+                   numInputSignals, offset, maxScopeChannels);
     }
-
-    BelaScopeOut_next(unit, 1);
-    SETCALC(BelaScopeOut_next);
+    unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels - offset);
+    if (unit->numScopeChannels <= 0) {
+        BelaUgen_disable(unit);
+    } else {
+        BelaScopeOut_next(unit, 1);
+        SETCALC(BelaScopeOut_next);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
