@@ -60,7 +60,14 @@ public:
 
     void Signal() {
         ++write;
-        available.notify_one();
+#ifdef SC_CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
+        if (mutex.try_lock()) {
+#endif // CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
+            available.notify_one();
+#ifdef SC_CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
+            mutex.unlock();
+        }
+#endif // CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
     }
 
 private:
