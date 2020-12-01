@@ -9,7 +9,7 @@ public:
         maxChannels(maxChannels_),
         bufferSamples(maxChannels_ * blockSize) {
         scope.setup(maxChannels, sampleRate);
-        buffer = new float[bufferSamples];
+        buffer = new float[bufferSamples]();
     }
 
     ~BelaScope() {

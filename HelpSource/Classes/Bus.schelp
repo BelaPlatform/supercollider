@@ -219,7 +219,7 @@ Scope all channels from this Bus to Bela's Oscilloscope (see link::Classes/BelaS
 It is required that this Bus is on Server running on a Bela, which is thus capable of using BelaScope.
 
 argument:: scopeChannel
-Bela's oscilloscope channel to start scoping on.
+Bela's oscilloscope channel to start scoping on. This has to be a non-negative number, and can't be changed after scoping starts.
 
 returns:: A link::Classes/Synth::, linking this Bus to BelaScope's bus.
 

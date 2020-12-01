@@ -29,7 +29,7 @@ method::scope
 Send an array of UGen data to Bela's oscilloscope.
 
 argument::channelOffset
-Bela's oscilloscope channel to start scoping on. 
+Bela's oscilloscope channel to start scoping on. This has to be a non-negative number, and can't be changed after scoping starts.
 
 argument::signals
 Array of UGens to scope
@@ -49,7 +49,7 @@ code::
 method::monitorBus
 Scope a Bus on Bela's oscilloscope
 argument::channelOffset
-Bela's oscilloscope channel to start scoping on. 
+Bela's oscilloscope channel to start scoping on. This has to be a non-negative number, and can't be changed after scoping starts.
 
 argument::busindex
 Index of the audio bus to scope

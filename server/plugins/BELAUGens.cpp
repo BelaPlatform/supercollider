@@ -1210,8 +1210,10 @@ void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
     unsigned int maxChannels = unit->mWorld->mBelaMaxScopeChannels;
     unsigned int scopeBufferSamples = unit->mWorld->mBelaScope->bufferSamples;
     float* inputPointers[numChannels];
+    // input 0: channelOffset
+    // inputs 1 to numInputs-1 : signal inputs
     for (unsigned int ch = 0; ch < numChannels; ++ch)
-        inputPointers[ch] = ZIN(ch + 1); // skip ZIN(0), it's channelOffset
+        inputPointers[ch] = ZIN(ch + 1); // skip ZIN(0)
 
     for (unsigned int frame = unit->offset; frame < scopeBufferSamples; frame += maxChannels)
         for (unsigned int ch = 0; ch < numChannels; ++ch)

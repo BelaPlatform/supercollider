@@ -619,7 +619,7 @@ Like link::Classes/Function#-scope::, plays and scopes this Function, but using 
 This Function's output bus is monitored right after the generated Synth.
 
 argument:: scopeChannel
-Bela's oscilloscope channel to start scoping on.
+Bela's oscilloscope channel to start scoping on. This has to be a non-negative number, and can't be changed after scoping starts.
 
 argument:: target
 A Node, Server, or Nil. A Server will be converted to the default group of that server. Nil will be converted to the default group of the default Server.

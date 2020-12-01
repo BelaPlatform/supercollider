@@ -761,7 +761,7 @@ Scope a number of channels from a Bus on this Server, to Bela's Oscilloscope (se
 It is required that this Server is running on a Bela, and that it is thus capable of using BelaScope.
 
 argument:: scopeChannel
-Bela's oscilloscope channel to start scoping on.
+Bela's oscilloscope channel to start scoping on. This has to be a non-negative number, and can't be changed after scoping starts.
 
 argument:: index
 This server's bus index to scope. Defaults to 0.

@@ -13,7 +13,7 @@ classmethods::
 
 method::ar
 argument::offset
-The Bela Oscilloscope's channel where to start writing.
+The Bela Oscilloscope's channel where to start writing. This is read only at construction time and thus it's not modulatable.
 argument::channelsArray
 An array of UGens to be scoped.
 
