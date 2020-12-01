@@ -20,14 +20,6 @@ It represents the maximum number of channels that is possible to scope on that s
 If set <= 0, the server won't instantiate any Scope object, and any attempt to instantiate a BelaScope from sclang will throw an error.
 ::
 
-note:: 
-When controlling a remote Bela server, it is necessary to manually set its code::belaMaxScopeChannels:: to the corresponding value set on the Bela when the server was booted:
-code::
-// Example:
-~belaServer = Server.remote(\bela, NetAddr("192.168.6.2", 57110), ServerOptions().belaMaxScopeChannels_(4));
-::
-::
-
 subsection:: Usage
 Once a Bela server is started with options.belaMaxScopeChannels > 0, it is possible to scope UGens and Busses using their .belaScope() methods. See examples below.
 
@@ -41,9 +33,6 @@ Bela's oscilloscope channel to start scoping on.
 
 argument::signals
 Array of UGens to scope
-
-argument::server
-Bela's SuperCollider server. If not already present, a new BelaScope instance is created and initialized automatically for this server.
 
 returns:: the array of code::signals:: passed in as an argument. This allows for transparent usage of code::.belaScope():: in processing chains
 
@@ -82,43 +71,21 @@ BelaScope.monitorBus(3, 4, 2, ~belaServer)
 Bus(\audio, 4, 2, ~belaServer).belaScope(3)
 ::
 
-method::new
-It shouldn't be needed to instantiate BelaScope manually, since instantiation is handled automatically when link::#*scope:: or a code::.belaScope():: method is called. Furthermore, only one instance is allowed for each server, so if one is already present, it will be returned without creating a new one.
-argument::server
-Bela's SuperCollider server, which should be booted with code::options.belaMaxScopeChannels:: > 0, otherwise this method will throw an error.
-
-
-instancemethods::
-
-method:: scope
-See link::#*scope::
-argument::channelOffset
-Bela's oscilloscope channel to start scoping on. 
-argument::busindex
-Index of the audio bus to scope
-argument::numChannels
-Number of bus channels to scope
-returns:: the array of code::signals:: passed in as an argument. This allows for transparent usage of code::.belaScope():: in processing chains
-
-method:: maxChannels
-returns:: Maximum number of oscilloscope channels, as set up by ServerOptions.maxBelaScopeChannels
-
 Examples::
 
 code::
 ~belaServer = Server.remote(\bela, NetAddr("192.168.6.2", 57110));
-~belaServer.options.maxBelaScopeChannels = 8;
 
 // UGens: usage like .poll
 // scope the LFNoise0, and still use it to modulate a SinOsc
-{ var freq = LFNoise0.kr.range(20,2000); SinOsc.ar(freq.belaScope(0)) }.play
+{ var freq = LFNoise0.kr.range(20,2000); SinOsc.ar(freq.belaScope(0)) }.play(~belaServer)
 
 // scope an Array of UGens:
-{ var freq = LFNoise0.kr.range(20,2000) ! 4; SinOsc.ar(freq.belaScope(0)) }.play
+{ var freq = LFNoise0.kr.range(20,2000) ! 4; SinOsc.ar(freq.belaScope(0)) }.play(~belaServer)
 
 // Bus: scope 3 channels from bus number 10 on Bela Oscilloscope's channel 4
 b = Bus(\audio, 10, 6, ~belaServer);
-{ SinOsc.ar }.play(outbus:b);
+{ SinOsc.ar }.play(~belaServer, outbus:b);
 b.belaScope(4);
 
 // Server: usage like .scope
@@ -129,5 +96,5 @@ b.belaScope(4);
 
 // Function: usage like .scope
 // play and scope a multi-output function; scope starting on BelaScope channel 4
-{ SinOsc.ar(LFNoise0.ar([1,2,3]).exprange(20,20000)) * LFNoise1.ar([1,2,3]).exprange(0.001, 0.1) }.belaScope(4)
+{ SinOsc.ar(LFNoise0.ar([1,2,3]).exprange(20,20000)) * LFNoise1.ar([1,2,3]).exprange(0.001, 0.1) }.belaScope(4, ~belaServer)
 ::

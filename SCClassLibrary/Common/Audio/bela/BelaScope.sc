@@ -77,9 +77,13 @@ BelaScope {
 }
 
 + Function {
-	belaScope { |scopeChannel, numChannels = 1, target, outbus = 0, fadeTime = 0.02, addAction = \addToHead, args|
-		var synth  = this.play(target, outbus, fadeTime, addAction, args);
-		var monitor = BelaScope.monitorBus(scopeChannel, outbus, numChannels, target);
+	belaScope { |scopeChannel, target, numChannels, outbus = 0, fadeTime = 0.02, addAction = \addToHead, args|
+		var synth, outUGen, monitor;
+		synth  = this.play(target, outbus, fadeTime, addAction, args);
+		outUGen = this.asSynthDef.children.detect { |ugen| ugen.class === Out };
+		numChannels = numChannels ?? { if(outUGen.notNil) { (outUGen.inputs.size - 1) } { 1 } };
+
+		monitor = BelaScope.monitorBus(scopeChannel, outbus, numChannels, target);
 		^synth.onFree { if(monitor.notNil) { monitor.free } };
 	}
 }
