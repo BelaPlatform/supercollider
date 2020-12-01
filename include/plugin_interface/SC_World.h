@@ -23,7 +23,7 @@
 
 #ifdef BELA
 #    include "Bela.h"
-#    include "../server/scsynth/SC_BelaScope.h"
+#    include "SC_BelaScope.h"
 #endif
 
 #include "SC_Types.h"
