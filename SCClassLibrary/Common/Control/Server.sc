@@ -255,43 +255,9 @@ ServerOptions {
 		});
 		if (thisProcess.platform.name === \osx && Server.program.asString.endsWith("supernova").not && safetyClipThreshold.notNil, {
 			o = o ++ " -s " ++ safetyClipThreshold;
-
-		// additions for BELA
-		if (numAnalogInChannels.notNil, {
-			o = o ++ " -J " ++ numAnalogInChannels;
 		});
-		if (numAnalogOutChannels.notNil, {
-			o = o ++ " -K " ++ numAnalogOutChannels;
-		});
-		if (numDigitalChannels.notNil, {
-			o = o ++ " -G " ++ numDigitalChannels;
-		});
-		if (headphoneLevel.notNil, {
-			o = o ++ " -Q " ++ headphoneLevel;
-		});
-		if (pgaGainLeft.notNil, {
-			o = o ++ " -X " ++ pgaGainLeft;
-		});
-		if (pgaGainRight.notNil, {
-			o = o ++ " -Y " ++ pgaGainRight;
-		});
-		if (speakerMuted.notNil, {
-			o = o ++ " -A " ++ speakerMuted;
-		});
-		if (dacLevel.notNil, {
-			o = o ++ " -x " ++ dacLevel;
-		});
-		if (adcLevel.notNil, {
-			o = o ++ " -y " ++ adcLevel;
-		});
-		if (numMultiplexChannels.notNil, {
-			o = o ++ " -g " ++ numMultiplexChannels;
-		});
-		if (belaPRU.notNil, {
-			o = o ++ " -T " ++ belaPRU;
-		});
-		if (belaMaxScopeChannels.notNil, {
-			o = o ++ " -E " ++ belaMaxScopeChannels;
+		if (Platform.hasBelaSupport, {
+			o = o ++ BelaServerOptions.asOptionsString(this)
 		});
 		^o
 	}
