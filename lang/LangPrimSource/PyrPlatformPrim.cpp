@@ -132,7 +132,7 @@ int prPlatform_architecture(struct VMGlobals* g, int numArgsPushed) {
 
 int prPlatform_hasBelaSupport(struct VMGlobals* g, int numArgsPushed) {
     PyrSlot* a = g->sp;
-#ifdef BELA
+#if (SC_AUDIO_API == SC_AUDIO_API_BELA)
     SetBool(a, true);
 #else
     SetBool(a, false);

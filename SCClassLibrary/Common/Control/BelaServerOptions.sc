@@ -22,7 +22,7 @@ BelaServerOptions {
 	}
 
 	*asOptionsString { | opts |
-		o = " -J " ++ this.getOpt(\numAnalogInChannels);
+		var o = " -J " ++ this.getOpt(\numAnalogInChannels);
 		o = o ++ " -K " ++ this.getOpt(\numAnalogOutChannels);
 		o = o ++ " -G " ++ this.getOpt(\numDigitalChannels);
 		o = o ++ " -Q " ++ this.getOpt(\headphoneLevel);

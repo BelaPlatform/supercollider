@@ -132,6 +132,8 @@ elseif (AUDIOAPI STREQUAL portaudio)
     add_definitions("-DSC_AUDIO_API_PORTAUDIO")
     list(APPEND sclang_sources ${CMAKE_SOURCE_DIR}/common/SC_PaUtils.cpp)
     include_directories(${PORTAUDIO_INCLUDE_DIRS})
+elseif (AUDIOAPI STREQUAL bela)
+	add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_BELA")
 endif()
 
 if(UNIX)
