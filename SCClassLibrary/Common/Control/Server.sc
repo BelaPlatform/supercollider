@@ -58,20 +58,6 @@ ServerOptions {
 
 	var <>safetyClipThreshold;
 
-	// extension for BELA
-	var <>numAnalogInChannels;
-	var <>numAnalogOutChannels;
-	var <>numDigitalChannels;
-	var <>headphoneLevel;
-	var <>pgaGainLeft;
-	var <>pgaGainRight;
-	var <>speakerMuted;
-	var <>dacLevel;
-	var <>adcLevel;
-	var <>numMultiplexChannels;
-	var <>belaPRU;
-	var <>belaMaxScopeChannels;
-
 	*initClass {
 		defaultValues = IdentityDictionary.newFrom(
 			(
@@ -115,18 +101,6 @@ ServerOptions {
 				recBufSize: nil,
 				bindAddress: "127.0.0.1",
 				safetyClipThreshold: 1.26 // ca. 2 dB
-				numAnalogInChannels: 2,
-				numAnalogOutChannels: 2,
-				numDigitalChannels: 16,
-				headphoneLevel: -6,
-				pgaGainLeft: 10,
-				pgaGainRight: 10,
-				speakerMuted: 0,
-				dacLevel: 0,
-				adcLevel: 0,
-				numMultiplexChannels: 0,
-				belaPRU: 1,
-				belaMaxScopeChannels: 0,
 			)
 		)
 	}
@@ -136,7 +110,10 @@ ServerOptions {
 	}
 
 	init {
-		defaultValues.keysValuesDo { |key, val| this.instVarPut(key, val) }
+		defaultValues.keysValuesDo { |key, val| this.instVarPut(key, val) };
+		if (Platform.hasBelaSupport, {
+			BelaServerOptions.addBelaOptions(this)
+		});
 	}
 
 	device {
