@@ -73,15 +73,9 @@ if(AUDIOAPI STREQUAL bela)
     # The Bela lib will have its own set of libraries and includes
     # However, the Bela audio backend for SC has some direct calls to Xenomai
     # Therefore we need to get flags for those as well
-    find_package(Xenomai)
-    if(NOT XENOMAI_FOUND)
-        message(FATAL_ERROR "Bela selected as audio API, but Xenomai development files not found")
-    endif()
-    find_package(Bela)
-    if(NOT BELA_FOUND)
-        message(FATAL_ERROR "Bela selected as audio API, but Bela development files not found")
-    endif()
-    message(STATUS "bela libs: ${BELA_LIBRARIES}")
+    find_package(Xenomai REQUIRED)
+    find_package(Bela REQUIRED)
+    message(STATUS "Found Bela libraries: ${BELA_LIBRARIES}")
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
         # recommended compile flags for beaglebone etc; set here because bela api flag directly implies the architecture
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BELA_C_FLAGS}")
@@ -93,12 +87,9 @@ if(BELA_FOUND)
     add_library(BelaUGens MODULE
         BelaUGens.cpp
     )
-    set(belaugens BelaUGens)
     add_definitions("-DSC_BELA" ${XENOMAI_DEFINITIONS} ${BELA_DEFINITIONS})
-    include_directories(${XENOMAI_INCLUDE_DIRS})
-    include_directories(${BELA_INCLUDE_DIRS})
-
-    target_link_libraries(BelaUGens)
+    include_directories(${XENOMAI_INCLUDE_DIRS} ${BELA_INCLUDE_DIRS})
+    target_link_libraries(BelaUGens ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES})
 
     list(APPEND plugins BelaUGens)
 endif()
@@ -250,12 +241,6 @@ if(NOT NO_X11)
 	foreach(ugen ${uiugens})
     target_link_libraries(${ugen} boost_thread_lib)
 	endforeach()
-endif()
-
-if(BELA_FOUND)
-    foreach(ugen ${belaugens})
-        target_link_libraries(${ugen} ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES})
-    endforeach()
 endif()
 
 foreach(plugin ${plugins})
