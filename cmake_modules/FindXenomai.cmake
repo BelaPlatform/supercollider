@@ -17,13 +17,13 @@
 if(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
     # in cache already
     set(XENOMAI_FOUND TRUE)
-else(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
+else()
     # Xenomai comes with its own ...-config program to get cflags and ldflags
     if(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
         # ifcross compiling, we want to find this program only from the sysroot
         set(CACHED ${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM})
         set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY)
-    endif(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+    endif()
     find_program(XENOMAI_XENO_CONFIG
         NAMES
             xeno-config
@@ -36,7 +36,7 @@ else(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
     if(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
         # restore the previous value
         set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ${CACHED})
-    endif(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+    endif()
 
     if(XENOMAI_XENO_CONFIG)
         set(XENOMAI_FOUND TRUE)
@@ -44,8 +44,8 @@ else(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
         string(STRIP "${XENOMAI_CFLAGS}" XENOMAI_CFLAGS)
         # use grep to separate out defines and includes
         execute_process(
-                COMMAND bash -c "A= ; for a in ${XENOMAI_CFLAGS}; do echo $a | grep -q \"\\-D.*\" && A=\"$A $a\"; done; echo $A"
-                OUTPUT_VARIABLE XENOMAI_DEFINITIONS)
+            COMMAND bash -c "A= ; for a in ${XENOMAI_CFLAGS}; do echo $a | grep -q \"\\-D.*\" && A=\"$A $a\"; done; echo $A"
+            OUTPUT_VARIABLE XENOMAI_DEFINITIONS)
         string(STRIP "${XENOMAI_DEFINITIONS}" XENOMAI_DEFINITIONS)
 
         execute_process(
@@ -58,7 +58,7 @@ else(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
             COMMAND sed "s/-Wl,@.*wrappers//g"
             OUTPUT_VARIABLE XENOMAI_LIBRARIES)
         string(STRIP "${XENOMAI_LIBRARIES}" XENOMAI_LIBRARIES)
-    endif(XENOMAI_XENO_CONFIG)
+    endif()
 
     if(XENOMAI_FOUND)
         if(NOT XENOMAI_FIND_QUIETLY)
@@ -67,13 +67,12 @@ else(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
             message(STATUS "XENOMAI_LIBRARIES: ${XENOMAI_LIBRARIES}")
             message(STATUS "XENOMAI_INCLUDE_DIRS: ${XENOMAI_INCLUDE_DIRS}")
             message(STATUS "XENOMAI_DEFINITIONS: ${XENOMAI_DEFINITIONS}")
-        endif(NOT XENOMAI_FIND_QUIETLY)
-    else(XENOMAI_FOUND)
-        if(XENOMAI_FIND_REQUIRED)
-            message(FATAL_ERROR "Could not find XENOMAI")
-        endif(XENOMAI_FIND_REQUIRED)
-    endif(XENOMAI_FOUND)
-# show the XENOMAI_ variables only in the advanced view
-mark_as_advanced(XENOMAI_LIBRARIES XENOMAI_INCLUDE_DIRS XENOMAI_DEFINITIONS)
+        endif()
+    elseif(XENOMAI_FIND_REQUIRED)
+        message(FATAL_ERROR "Could not find XENOMAI")
+    endif()
 
-endif(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
+    # show the XENOMAI_ variables only in the advanced view
+    mark_as_advanced(XENOMAI_LIBRARIES XENOMAI_INCLUDE_DIRS XENOMAI_DEFINITIONS)
+
+endif()
