@@ -27,18 +27,16 @@
 
 #ifdef __COBALT__
 #    include <XenomaiLock.h>
-typedef XenomaiMutex SC_Lock;
+using SC_Lock = XenomaiMutex;
+using condition_variable_any = XenomaiConditionVariable;
 #else // __COBALT__
-typedef std::mutex SC_Lock;
+using SC_Lock = std::mutex;
+using condition_variable_any = std::condition_variable_any;
 #endif // __COBALT__
-typedef std::thread SC_Thread;
+
+using SC_Thread = std::thread;
 using std::cv_status;
 using std::lock_guard;
 using std::timed_mutex;
 using std::unique_lock;
-#ifdef __COBALT__
-typedef XenomaiConditionVariable condition_variable_any;
-#else // __COBALT__
-typedef std::condition_variable_any condition_variable_any;
-#endif // __COBALT__
-typedef SC_Lock mutex;
+using mutex = SC_Lock;
