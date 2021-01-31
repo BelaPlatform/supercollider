@@ -4,6 +4,7 @@
 #include <error.h>
 #include <string.h>
 #include <cobalt/sys/cobalt.h>
+#include <xenomai/init.h>
 #ifndef _GNU_SOURCE
 #    define _GNU_SOURCE
 #endif
@@ -24,10 +25,6 @@
 #    define xprintf(...)
 #    define xfprintf(...)
 #endif // PRINT_XENO_LOCK
-
-extern "C" {
-void xenomai_init(int* argcp, char* const** argvp);
-}
 
 static inline pid_t get_tid() {
     pid_t tid = syscall(SYS_gettid);
