@@ -1,5 +1,7 @@
 BelaServerOptions : ServerOptions {
 
+	classvar defaultValues;
+
 	var <>numAnalogInChannels;
 	var <>numAnalogOutChannels;
 	var <>numDigitalChannels;
@@ -12,8 +14,6 @@ BelaServerOptions : ServerOptions {
 	var <>numMultiplexChannels;
 	var <>belaPRU;
 	var <>belaMaxScopeChannels;
-
-	classvar defaultValues;
 
 	*initClass {
 		defaultValues = super.defaultValues.copy.putAll((
