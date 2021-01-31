@@ -60,7 +60,7 @@ elseif(AUDIOAPI STREQUAL bela)
         message(FATAL_ERROR "Bela selected as audio API, but Bela development files not found")
     endif()
     message(STATUS "bela libs: ${BELA_LIBRARIES}")
-    if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
+    if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
         # recommended compile flags for beaglebone etc; set here because bela api flag directly implies the architecture
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BELA_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BELA_CXX_FLAGS}")
@@ -124,7 +124,7 @@ if (FFT_GREEN)
 	list(APPEND scsynth_sources ../../common/fftlib.c)
 endif()
 
-if (XENOMAI_FOUND)
+if(XENOMAI_FOUND)
 	list(APPEND scsynth_sources ../../common/XenomaiLock.cpp)
 endif()
 
