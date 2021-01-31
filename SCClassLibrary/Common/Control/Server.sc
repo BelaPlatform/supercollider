@@ -366,9 +366,7 @@ Server {
 		bufferAllocClass = ContiguousBlockAllocator;
 		busAllocClass = ContiguousBlockAllocator;
 
-		defaultOptionsClass = case
-			{ Platform.hasBelaSupport } { BelaServerOptions }
-			{ ServerOptions };
+		defaultOptionsClass = if(Platform.hasBelaSupport, BelaServerOptions, ServerOptions);
 
 		default = local = Server.new(\localhost, NetAddr("127.0.0.1", 57110));
 		internal = Server.new(\internal, NetAddr.new);

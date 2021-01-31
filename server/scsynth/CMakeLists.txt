@@ -51,15 +51,9 @@ elseif(AUDIOAPI STREQUAL bela)
     # The Bela lib will have its own set of libraries and includes
     # However, the Bela audio backend for SC has some direct calls to Xenomai
     # Therefore we need to get flags for those as well
-    find_package(Xenomai)
-    if(NOT XENOMAI_FOUND)
-        message(FATAL_ERROR "Bela selected as audio API, but Xenomai development files not found")
-    endif()
-    find_package(Bela)
-    if(NOT BELA_FOUND)
-        message(FATAL_ERROR "Bela selected as audio API, but Bela development files not found")
-    endif()
-    message(STATUS "bela libs: ${BELA_LIBRARIES}")
+    find_package(Xenomai REQUIRED)
+    find_package(Bela REQUIRED)
+    message(STATUS "Found Bela libraries: ${BELA_LIBRARIES}")
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
         # recommended compile flags for beaglebone etc; set here because bela api flag directly implies the architecture
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BELA_C_FLAGS}")
@@ -124,8 +118,8 @@ if (FFT_GREEN)
 	list(APPEND scsynth_sources ../../common/fftlib.c)
 endif()
 
-if(XENOMAI_FOUND)
-	list(APPEND scsynth_sources ../../common/XenomaiLock.cpp)
+if(AUDIOAPI STREQUAL bela)
+    list(APPEND scsynth_sources ../../common/XenomaiLock.cpp)
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include/common
@@ -148,8 +142,7 @@ elseif (AUDIOAPI STREQUAL portaudio)
 elseif (AUDIOAPI STREQUAL bela)
     list(APPEND scsynth_sources SC_Bela.cpp)
     add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_BELA" "-DSC_BELA" ${XENOMAI_DEFINITIONS} ${BELA_DEFINITIONS})
-    include_directories(${XENOMAI_INCLUDE_DIRS})
-    include_directories(${BELA_INCLUDE_DIRS})
+    include_directories(${XENOMAI_INCLUDE_DIRS} ${BELA_INCLUDE_DIRS})
 endif()
 
 set (FINAL_BUILD 0) # disable final build for scsynth

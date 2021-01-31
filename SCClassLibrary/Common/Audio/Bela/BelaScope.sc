@@ -6,13 +6,8 @@ BelaScope {
 	// public interface
 
 	*scope { |channelOffset, signals|
-
 		var ugens = this.prInputAsAudioRateUGens(signals);
-
-		ugens !? {
-			BelaScopeOut.ar(channelOffset, ugens);
-		};
-
+		ugens !? { BelaScopeOut.ar(channelOffset, ugens); };
 		^signals;
 	}
 
@@ -34,11 +29,11 @@ BelaScope {
 	// scope input checks
 
 	*prInputAsAudioRateUGens { |signals|
-		var arUGens = signals.asArray.collect{ |item|
+		var arUGens = signals.asArray.collect { |item|
 			switch(item.rate)
-				{ \audio }{ item } // pass
-				{ \control }{ K2A.ar(item) } // convert kr to ar
-				{ \scalar }{
+				{ \audio } { item } // pass
+				{ \control } { K2A.ar(item) } // convert kr to ar
+				{ \scalar } {
 					// convert numbers to ar UGens
 					if(item.isNumber) { DC.ar(item) } { nil }
 				}
@@ -48,10 +43,8 @@ BelaScope {
 		if(arUGens.every(_.isUGen)) {
 			^arUGens;
 		} {
-			warn(
-				"BelaScope: can't scope this signal, because not all of its elements are UGens.\nSignal: %"
-				.format(signals)
-			);
+			"BelaScope: can't scope this signal, because not all of its elements are UGens.\nSignal: %"
+				.format(signals).warn;
 			^nil;
 		}
 	}
@@ -79,7 +72,7 @@ BelaScope {
 + Function {
 	belaScope { |scopeChannel, target, numChannels, outbus = 0, fadeTime = 0.02, addAction = \addToHead, args|
 		var synth, outUGen, monitor;
-		synth  = this.play(target, outbus, fadeTime, addAction, args);
+		synth = this.play(target, outbus, fadeTime, addAction, args);
 		outUGen = this.asSynthDef.children.detect { |ugen| ugen.class === Out };
 		numChannels = numChannels ?? { if(outUGen.notNil) { (outUGen.inputs.size - 1) } { 1 } };
 
