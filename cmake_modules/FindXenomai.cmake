@@ -14,16 +14,16 @@
 #    For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
-if (XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
+if(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
     # in cache already
     set(XENOMAI_FOUND TRUE)
-else (XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
+else(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
     # Xenomai comes with its own ...-config program to get cflags and ldflags
-    if (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
-        # if cross compiling, we want to find this program only from the sysroot
+    if(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+        # ifcross compiling, we want to find this program only from the sysroot
         set(CACHED ${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM})
         set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY)
-    endif (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+    endif(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
     find_program(XENOMAI_XENO_CONFIG
         NAMES
             xeno-config
@@ -33,12 +33,12 @@ else (XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
             /usr/local/bin
             /usr/bin
     )
-    if (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+    if(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
         # restore the previous value
         set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ${CACHED})
-    endif (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+    endif(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
 
-    if (XENOMAI_XENO_CONFIG)
+    if(XENOMAI_XENO_CONFIG)
         set(XENOMAI_FOUND TRUE)
         execute_process(COMMAND ${XENOMAI_XENO_CONFIG} --skin=posix --cflags OUTPUT_VARIABLE XENOMAI_CFLAGS)
         string(STRIP "${XENOMAI_CFLAGS}" XENOMAI_CFLAGS)
@@ -58,22 +58,22 @@ else (XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
             COMMAND sed "s/-Wl,@.*wrappers//g"
             OUTPUT_VARIABLE XENOMAI_LIBRARIES)
         string(STRIP "${XENOMAI_LIBRARIES}" XENOMAI_LIBRARIES)
-    endif (XENOMAI_XENO_CONFIG)
+    endif(XENOMAI_XENO_CONFIG)
 
-    if (XENOMAI_FOUND)
-        if (NOT XENOMAI_FIND_QUIETLY)
+    if(XENOMAI_FOUND)
+        if(NOT XENOMAI_FIND_QUIETLY)
             execute_process(COMMAND ${XENOMAI_XENO_CONFIG} --prefix OUTPUT_VARIABLE XENOMAI_PREFIX)
             message(STATUS "Found xenomai: ${XENOMAI_PREFIX}")
             message(STATUS "XENOMAI_LIBRARIES: ${XENOMAI_LIBRARIES}")
             message(STATUS "XENOMAI_INCLUDE_DIRS: ${XENOMAI_INCLUDE_DIRS}")
             message(STATUS "XENOMAI_DEFINITIONS: ${XENOMAI_DEFINITIONS}")
-        endif (NOT XENOMAI_FIND_QUIETLY)
-    else (XENOMAI_FOUND)
-        if (XENOMAI_FIND_REQUIRED)
+        endif(NOT XENOMAI_FIND_QUIETLY)
+    else(XENOMAI_FOUND)
+        if(XENOMAI_FIND_REQUIRED)
             message(FATAL_ERROR "Could not find XENOMAI")
-        endif (XENOMAI_FIND_REQUIRED)
-    endif (XENOMAI_FOUND)
+        endif(XENOMAI_FIND_REQUIRED)
+    endif(XENOMAI_FOUND)
 # show the XENOMAI_ variables only in the advanced view
 mark_as_advanced(XENOMAI_LIBRARIES XENOMAI_INCLUDE_DIRS XENOMAI_DEFINITIONS)
 
-endif (XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
+endif(XENOMAI_LIBRARIES AND XENOMAI_INCLUDE_DIRS AND XENOMAI_DEFINITIONS)
