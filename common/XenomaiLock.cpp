@@ -62,7 +62,7 @@ static int turn_into_cobalt_thread(bool recurred = false) {
                 strerror(-ret));
         initialize_xenomai();
         if (!recurred)
-            return turn_into_cobalt_thread(1);
+            return turn_into_cobalt_thread(true);
         else
             return -1;
     }
