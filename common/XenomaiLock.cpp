@@ -49,7 +49,7 @@ static void initialize_xenomai() {
     xenomai_init(&argc, argvPtrs);
 }
 
-static int turn_into_cobalt_thread(bool recurred = false) {
+static bool turn_into_cobalt_thread(bool recurred = false) {
     int current_mode = cobalt_thread_mode();
     struct sched_param param;
     memset(&param, 0, sizeof(param));
@@ -64,10 +64,10 @@ static int turn_into_cobalt_thread(bool recurred = false) {
         if (!recurred)
             return turn_into_cobalt_thread(true);
         else
-            return -1;
+            return false;
     }
     xprintf("Turned thread %d into a Cobalt thread %s\n", tid, recurred ? "with recursion" : "");
-    return 0;
+    return true;
 }
 
 XenomaiInitializer::XenomaiInitializer() { initialize_xenomai(); }
@@ -117,7 +117,7 @@ template <typename F, typename T> static bool try_or_retry_impl(F&& func, bool e
         return true;
     } else if (ret != EPERM) {
         return false;
-    } else if (turn_into_cobalt_thread()) {
+    } else if (!turn_into_cobalt_thread()) {
         // if we got EPERM, we are not a Xenomai thread
         xfprintf(stderr, "%s %p could not turn into cobalt\n", name, id);
         return false;
