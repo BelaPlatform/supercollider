@@ -18,11 +18,11 @@ class XenomaiMutex {
 
 public:
     XenomaiMutex();
-    XenomaiMutex(std::unique_lock<XenomaiMutex>&);
     ~XenomaiMutex();
-    bool try_lock(bool recurred = false);
-    void lock(bool recurred = false);
-    void unlock(bool recurred = false);
+
+    bool try_lock();
+    void lock();
+    void unlock();
 
 private:
     pthread_mutex_t mutex;
@@ -33,9 +33,10 @@ class XenomaiConditionVariable {
 public:
     XenomaiConditionVariable();
     ~XenomaiConditionVariable();
-    void wait(std::unique_lock<XenomaiMutex>& lck, bool recurred = false);
-    void notify_one(bool recurred = false) noexcept;
-    void notify_all(bool recurred = false) noexcept;
+
+    void wait(std::unique_lock<XenomaiMutex>& lck);
+    void notify_one() noexcept;
+    void notify_all() noexcept;
 
 private:
     pthread_cond_t cond;

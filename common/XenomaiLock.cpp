@@ -102,42 +102,53 @@ XenomaiMutex::~XenomaiMutex() {
 // - if it fails again, just fail
 // - return true if it succeeds, or false if it fails
 // id and name are just for debugging purposes, while enabled is there because it saves duplicating some lines
-template <typename T> static int try_or_retry(std::function<int()> func, T* id, const char* name, bool enabled) {
+template <typename F, typename T> static bool try_or_retry_impl(F&& func, bool enabled, T* id, const char* name) {
     xprintf("tid: %d ", get_tid());
-    int ret;
     if (!enabled) {
-        xfprintf(stderr, "%s %d disabled %p\n", name, id);
+        xfprintf(stderr, "%s disabled %p\n", name, id);
         return false;
     }
+
     xprintf("%s %p\n", name, id);
-    if (EPERM != (ret = func())) // "success" (or at least meaningful failure)
-        return ret;
-    // if we got EPERM, we are not a Xenomai thread
-    if (turn_into_cobalt_thread()) {
+
+    int ret = func();
+    // 0 is "success" (or at least meaningful failure)
+    if (ret == 0) {
+        return true;
+    } else if (ret != EPERM) {
+        return false;
+    } else if (turn_into_cobalt_thread()) {
+        // if we got EPERM, we are not a Xenomai thread
         xfprintf(stderr, "%s %p could not turn into cobalt\n", name, id);
-        return EPERM;
+        return false;
     }
-    if (EPERM == (ret = func()))
+
+    // retry after becoming a cobalt thread
+    ret = func();
+    if (ret == 0) {
+        return true;
+    } else {
         xfprintf(stderr, "%s %p failed after having turned into cobalt: %d\n", name, id, ret);
-    return ret;
+        return false;
+    }
 }
 
+// Helper macro to insert this-ptr and function name
+#define TRY_OR_RETRY(_func_, _enabled_) try_or_retry_impl(_func_, _enabled_, this, __func__)
+
 // condition resource_deadlock_would_occur instead of deadlocking. https://en.cppreference.com/w/cpp/thread/mutex/lock
-bool XenomaiMutex::try_lock(bool recurred) {
-    const char name[] = "try_lock";
-    return 0 == try_or_retry([this]() { return __wrap_pthread_mutex_trylock(&this->mutex); }, &mutex, name, enabled);
-    // TODO: An implementation tgat can detect the invalid usage is encouraged to throw a std::system_error with error
+bool XenomaiMutex::try_lock() {
+    return TRY_OR_RETRY([this]() { return __wrap_pthread_mutex_trylock(&this->mutex); }, enabled);
+    // TODO: An implementation that can detect the invalid usage is encouraged to throw a std::system_error with error
     // condition resource_deadlock_would_occur instead of deadlocking.
 }
 
-void XenomaiMutex::lock(bool recurred) {
-    const char name[] = "lock";
-    try_or_retry([this]() { return __wrap_pthread_mutex_lock(&this->mutex); }, &mutex, name, enabled);
+void XenomaiMutex::lock() {
+    TRY_OR_RETRY([this]() { return __wrap_pthread_mutex_lock(&this->mutex); }, enabled);
 }
 
-void XenomaiMutex::unlock(bool recurred) {
-    const char name[] = "unlock";
-    try_or_retry([this]() { return __wrap_pthread_mutex_unlock(&mutex); }, &mutex, name, enabled);
+void XenomaiMutex::unlock() {
+    TRY_OR_RETRY([this]() { return __wrap_pthread_mutex_unlock(&this->mutex); }, enabled);
 }
 
 XenomaiConditionVariable::XenomaiConditionVariable() {
@@ -165,7 +176,7 @@ XenomaiConditionVariable::~XenomaiConditionVariable() {
     }
 }
 
-void XenomaiConditionVariable::wait(std::unique_lock<XenomaiMutex>& lck, bool recurred) {
+void XenomaiConditionVariable::wait(std::unique_lock<XenomaiMutex>& lck) {
     // If any parameter has a value that is not valid for this function (such as if lck's mutex object is not locked by
     // the calling thread), it causes undefined behavior.
 
@@ -175,17 +186,13 @@ void XenomaiConditionVariable::wait(std::unique_lock<XenomaiMutex>& lck, bool re
 
     // It may throw system_error in case of failure (transmitting any error condition from the respective call to lock
     // or unlock). The predicate version (2) may also throw exceptions thrown by pred.
-    const char name[] = "wait";
-    try_or_retry([this, &lck]() { return __wrap_pthread_cond_wait(&this->cond, &lck.mutex()->mutex); }, &cond, name,
-                 enabled);
+    TRY_OR_RETRY([this, &lck]() { return __wrap_pthread_cond_wait(&this->cond, &lck.mutex()->mutex); }, enabled);
 }
 
-void XenomaiConditionVariable::notify_one(bool recurred) noexcept {
-    const char name[] = "notify_one";
-    try_or_retry([this]() { return __wrap_pthread_cond_signal(&this->cond); }, &cond, name, enabled);
+void XenomaiConditionVariable::notify_one() noexcept {
+    TRY_OR_RETRY([this]() { return __wrap_pthread_cond_signal(&this->cond); }, enabled);
 }
 
-void XenomaiConditionVariable::notify_all(bool recurred) noexcept {
-    const char name[] = "notify_all";
-    try_or_retry([this]() { return __wrap_pthread_cond_broadcast(&this->cond); }, &cond, name, enabled);
+void XenomaiConditionVariable::notify_all() noexcept {
+    TRY_OR_RETRY([this]() { return __wrap_pthread_cond_broadcast(&this->cond); }, enabled);
 }
