@@ -37,9 +37,10 @@
 #    include <unistd.h> // for _POSIX_MEMLOCK
 #    include <sys/wait.h>
 #endif
+
 #ifdef __COBALT__
 #    include "XenomaiLock.h"
-XenomaiInitializer xenomaiInitializer;
+static XenomaiInitializer xenomaiInitializer;
 #endif // __COBALT__
 
 #ifdef _WIN32
