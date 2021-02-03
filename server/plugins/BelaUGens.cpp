@@ -81,7 +81,7 @@ public:
             buffer[count - 1] = last;
     }
     float& operator[](unsigned int n) {
-        if (n > count)
+        if (n >= count)
             lastTouched = true;
         return at(n);
     }
