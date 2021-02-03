@@ -115,14 +115,16 @@ template <typename F, typename T> static bool tryOrRetryImpl(F&& func, bool enab
 
     int ret = func();
     // 0 is "success" (or at least meaningful failure)
-    if (ret == 0) {
+    if (0 == ret) {
         return true;
-    } else if (ret != EPERM) {
+    } else if (EPERM != ret) {
         return false;
-    } else if (!turnIntoCobaltThread()) {
+    } else {
         // if we got EPERM, we are not a Xenomai thread
-        xfprintf(stderr, "%s %p could not turn into cobalt\n", name, id);
-        return false;
+        if (!turnIntoCobaltThread()) {
+            xfprintf(stderr, "%s %p could not turn into cobalt\n", name, id);
+            return false;
+        }
     }
 
     // retry after becoming a cobalt thread
