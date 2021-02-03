@@ -48,6 +48,10 @@ protected:
         else
             return last;
     }
+    void updateBufferWithLast() { buffer[count - 1] = last; }
+    unsigned int count() const { return count; }
+
+private:
     float* buffer;
     float last;
     const unsigned int count;
@@ -78,10 +82,10 @@ public:
         // calling [], you may have been passed a reference to last instead of
         // a pointer into the buffer itself. Here, we ensure we put it back into the buffer
         if (lastTouched)
-            buffer[count - 1] = last;
+            updateBufferWithLast();
     }
     float& operator[](unsigned int n) {
-        if (n >= count)
+        if (n >= count())
             lastTouched = true;
         return at(n);
     }
