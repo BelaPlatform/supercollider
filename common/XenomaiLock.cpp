@@ -26,6 +26,7 @@
 #    define xfprintf(...)
 #endif // PRINT_XENO_LOCK
 
+// Standard Linux `gettid(2)` not available on Bela
 static inline pid_t get_tid() {
     pid_t tid = syscall(SYS_gettid);
     return tid;
