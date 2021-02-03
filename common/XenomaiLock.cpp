@@ -27,7 +27,7 @@
 #endif // PRINT_XENO_LOCK
 
 // Standard Linux `gettid(2)` not available on Bela
-static inline pid_t get_tid() {
+static inline pid_t getTid() {
     pid_t tid = syscall(SYS_gettid);
     return tid;
 }
@@ -35,8 +35,8 @@ static inline pid_t get_tid() {
 // throughout, we use heuristics to check whether Xenomai needs to be
 // initialised and whether the current thread is a Xenomai thread.
 // See https://www.xenomai.org/pipermail/xenomai/2019-January/040203.html
-static void initialize_xenomai() {
-    xprintf("Initialize_xenomai\n");
+static void initializeXenomai() {
+    xprintf("initializeXenomai\n");
     int argc = 2;
     char blankOpt[] = "";
 #ifdef PRINT_XENO_LOCK
@@ -50,20 +50,20 @@ static void initialize_xenomai() {
     xenomai_init(&argc, argvPtrs);
 }
 
-static bool turn_into_cobalt_thread(bool recurred = false) {
+static bool turnIntoCobaltThread(bool recurred = false) {
     int current_mode = cobalt_thread_mode();
     struct sched_param param;
     memset(&param, 0, sizeof(param));
     int policy;
     int ret = pthread_getschedparam(pthread_self(), &policy, &param);
-    pid_t tid = get_tid();
+    pid_t tid = getTid();
 
     if (int ret = __wrap_sched_setscheduler(tid, policy, &param)) {
         fprintf(stderr, "Warning: unable to turn current thread into a Xenomai thread : (%d) %s\n", -ret,
                 strerror(-ret));
-        initialize_xenomai();
+        initializeXenomai();
         if (!recurred)
-            return turn_into_cobalt_thread(true);
+            return turnIntoCobaltThread(true);
         else
             return false;
     }
@@ -71,7 +71,7 @@ static bool turn_into_cobalt_thread(bool recurred = false) {
     return true;
 }
 
-XenomaiInitializer::XenomaiInitializer() { initialize_xenomai(); }
+XenomaiInitializer::XenomaiInitializer() { initializeXenomai(); }
 
 XenomaiMutex::XenomaiMutex() {
     xprintf("Construct mutex\n");
@@ -81,7 +81,7 @@ XenomaiMutex::XenomaiMutex() {
             return;
         } else {
             xprintf("mutex init returned EPERM\n");
-            initialize_xenomai();
+            initializeXenomai();
             if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
                 fprintf(stderr, "Error: unable to initialize mutex : (%d) %s\n", ret, strerror(-ret));
                 return;
@@ -103,8 +103,8 @@ XenomaiMutex::~XenomaiMutex() {
 // - if it fails again, just fail
 // - return true if it succeeds, or false if it fails
 // id and name are just for debugging purposes, while enabled is there because it saves duplicating some lines
-template <typename F, typename T> static bool try_or_retry_impl(F&& func, bool enabled, T* id, const char* name) {
-    xprintf("tid: %d ", get_tid());
+template <typename F, typename T> static bool tryOrRetryImpl(F&& func, bool enabled, T* id, const char* name) {
+    xprintf("tid: %d ", getTid());
     if (!enabled) {
         xfprintf(stderr, "%s disabled %p\n", name, id);
         return false;
@@ -118,7 +118,7 @@ template <typename F, typename T> static bool try_or_retry_impl(F&& func, bool e
         return true;
     } else if (ret != EPERM) {
         return false;
-    } else if (!turn_into_cobalt_thread()) {
+    } else if (!turnIntoCobaltThread()) {
         // if we got EPERM, we are not a Xenomai thread
         xfprintf(stderr, "%s %p could not turn into cobalt\n", name, id);
         return false;
@@ -135,21 +135,21 @@ template <typename F, typename T> static bool try_or_retry_impl(F&& func, bool e
 }
 
 // Helper macro to insert this-ptr and function name
-#define TRY_OR_RETRY(_func_, _enabled_) try_or_retry_impl(_func_, _enabled_, this, __func__)
+#define tryOrRetry(_func_, _enabled_) tryOrRetryImpl(_func_, _enabled_, this, __func__)
 
 // condition resource_deadlock_would_occur instead of deadlocking. https://en.cppreference.com/w/cpp/thread/mutex/lock
 bool XenomaiMutex::try_lock() {
-    return TRY_OR_RETRY([this]() { return __wrap_pthread_mutex_trylock(&this->mutex); }, enabled);
+    return tryOrRetry([this]() { return __wrap_pthread_mutex_trylock(&this->mutex); }, enabled);
     // TODO: An implementation that can detect the invalid usage is encouraged to throw a std::system_error with error
     // condition resource_deadlock_would_occur instead of deadlocking.
 }
 
 void XenomaiMutex::lock() {
-    TRY_OR_RETRY([this]() { return __wrap_pthread_mutex_lock(&this->mutex); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_mutex_lock(&this->mutex); }, enabled);
 }
 
 void XenomaiMutex::unlock() {
-    TRY_OR_RETRY([this]() { return __wrap_pthread_mutex_unlock(&this->mutex); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_mutex_unlock(&this->mutex); }, enabled);
 }
 
 XenomaiConditionVariable::XenomaiConditionVariable() {
@@ -160,7 +160,7 @@ XenomaiConditionVariable::XenomaiConditionVariable() {
             return;
         } else {
             xprintf("mutex init returned EPERM\n");
-            initialize_xenomai();
+            initializeXenomai();
             if (int ret = __wrap_pthread_cond_init(&cond, NULL)) {
                 fprintf(stderr, "Error: unable to create condition variable : (%d) %s\n", ret, strerror(ret));
                 return;
@@ -187,13 +187,13 @@ void XenomaiConditionVariable::wait(std::unique_lock<XenomaiMutex>& lck) {
 
     // It may throw system_error in case of failure (transmitting any error condition from the respective call to lock
     // or unlock). The predicate version (2) may also throw exceptions thrown by pred.
-    TRY_OR_RETRY([this, &lck]() { return __wrap_pthread_cond_wait(&this->cond, &lck.mutex()->mutex); }, enabled);
+    tryOrRetry([this, &lck]() { return __wrap_pthread_cond_wait(&this->cond, &lck.mutex()->mutex); }, enabled);
 }
 
 void XenomaiConditionVariable::notify_one() noexcept {
-    TRY_OR_RETRY([this]() { return __wrap_pthread_cond_signal(&this->cond); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_cond_signal(&this->cond); }, enabled);
 }
 
 void XenomaiConditionVariable::notify_all() noexcept {
-    TRY_OR_RETRY([this]() { return __wrap_pthread_cond_broadcast(&this->cond); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_cond_broadcast(&this->cond); }, enabled);
 }
