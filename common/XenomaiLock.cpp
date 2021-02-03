@@ -44,8 +44,8 @@ static void initialize_xenomai() {
     char traceOpt[] = "";
 #endif // PRINT_XENO_LOCK
 
-    char* const argv[3] = { blankOpt, traceOpt, blankOpt };
-    char* const* argvPtrs[3] = { &argv[0], &argv[1], &argv[2] };
+    char* const argv[argc] = { blankOpt, traceOpt };
+    char* const* argvPtrs[argc] = { &argv[0], &argv[1] };
     xenomai_init(&argc, argvPtrs);
 }
 
