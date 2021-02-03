@@ -25,8 +25,8 @@ public:
     void unlock();
 
 private:
-    pthread_mutex_t mutex;
-    bool enabled = false;
+    pthread_mutex_t m_mutex;
+    bool m_enabled = false;
 };
 
 class XenomaiConditionVariable {
@@ -39,6 +39,6 @@ public:
     void notify_all() noexcept;
 
 private:
-    pthread_cond_t cond;
-    bool enabled = false;
+    pthread_cond_t m_cond;
+    bool m_enabled = false;
 };
