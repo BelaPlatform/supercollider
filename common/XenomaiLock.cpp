@@ -188,7 +188,7 @@ void XenomaiConditionVariable::wait(std::unique_lock<XenomaiMutex>& lck) {
 
     // It may throw system_error in case of failure (transmitting any error condition from the respective call to lock
     // or unlock). The predicate version (2) may also throw exceptions thrown by pred.
-    tryOrRetry([this, &lck]() { return __wrap_pthread_cond_wait(&this->cond, &lck.mutex()->mutex); }, enabled);
+    tryOrRetry(([this, &lck]() { return __wrap_pthread_cond_wait(&this->cond, &lck.mutex()->mutex); }), enabled);
 }
 
 void XenomaiConditionVariable::notify_one() noexcept {
