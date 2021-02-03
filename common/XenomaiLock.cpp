@@ -40,21 +40,16 @@ static inline pid_t get_tid() {
 static void initialize_xenomai() {
     xprintf("Initialize_xenomai\n");
     int argc = 2;
-    char const0[] = "";
+    char blankOpt[] = "";
 #ifdef PRINT_XENO_LOCK
-    char const1[] = "--trace";
+    char traceOpt[] = "--trace";
 #else // PRINT_XENO_LOCK
-    char const1[] = "";
+    char traceOpt[] = "";
 #endif // PRINT_XENO_LOCK
-    char const2[] = "";
-    char* const arg0 = const0;
-    char* const arg1 = const1;
-    char* const arg2 = const2;
-    char* const** argv = (char* const**)malloc(sizeof(char**) * argc + 1);
-    argv[0] = &arg0;
-    argv[1] = &arg1;
-    argv[argc] = &arg2;
-    xenomai_init(&argc, argv);
+
+    char* const argv[3] = { blankOpt, traceOpt, blankOpt };
+    char* const* argvPtrs[3] = { &argv[0], &argv[1], &argv[2] };
+    xenomai_init(&argc, argvPtrs);
 }
 
 static int turn_into_cobalt_thread(bool recurred = false) {
@@ -82,14 +77,12 @@ XenomaiInitializer::XenomaiInitializer() { initialize_xenomai(); }
 
 XenomaiMutex::XenomaiMutex() {
     xprintf("Construct mutex\n");
-    if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
-        if (EPERM == ret) {
-            xprintf("mutex init returned EPERM\n");
-            initialize_xenomai();
-            if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
-                fprintf(stderr, "Error: unable to initialize mutex : (%d) %s\n", ret, strerror(-ret));
-                return;
-            }
+    if (EPERM == __wrap_pthread_mutex_init(&mutex, NULL)) {
+        xprintf("mutex init returned EPERM\n");
+        initialize_xenomai();
+        if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
+            fprintf(stderr, "Error: unable to initialize mutex : (%d) %s\n", ret, strerror(-ret));
+            return;
         }
     }
     enabled = true;

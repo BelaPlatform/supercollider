@@ -62,11 +62,11 @@ public:
         ++write;
 #ifdef SC_CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
         if (mutex.try_lock()) {
-#endif // CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
             available.notify_one();
-#ifdef SC_CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
             mutex.unlock();
         }
+#else // CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
+        available.notify_one();
 #endif // CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY
     }
 
