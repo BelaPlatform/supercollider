@@ -74,12 +74,17 @@ XenomaiInitializer::XenomaiInitializer() { initialize_xenomai(); }
 
 XenomaiMutex::XenomaiMutex() {
     xprintf("Construct mutex\n");
-    if (EPERM == __wrap_pthread_mutex_init(&mutex, NULL)) {
-        xprintf("mutex init returned EPERM\n");
-        initialize_xenomai();
-        if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
-            fprintf(stderr, "Error: unable to initialize mutex : (%d) %s\n", ret, strerror(-ret));
+    if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
+        if (EPERM != ret) {
+            xprintf("__wrap_thread_mutex_init failed with %d %s\n", ret, strerror(ret));
             return;
+        } else {
+            xprintf("mutex init returned EPERM\n");
+            initialize_xenomai();
+            if (int ret = __wrap_pthread_mutex_init(&mutex, NULL)) {
+                fprintf(stderr, "Error: unable to initialize mutex : (%d) %s\n", ret, strerror(-ret));
+                return;
+            }
         }
     }
     enabled = true;
@@ -121,7 +126,7 @@ template <typename T> static int try_or_retry(std::function<int()> func, T* id, 
 bool XenomaiMutex::try_lock(bool recurred) {
     const char name[] = "try_lock";
     return 0 == try_or_retry([this]() { return __wrap_pthread_mutex_trylock(&this->mutex); }, &mutex, name, enabled);
-    // TODO: An implementation that can detect the invalid usage is encouraged to throw a std::system_error with error
+    // TODO: An implementation tgat can detect the invalid usage is encouraged to throw a std::system_error with error
     // condition resource_deadlock_would_occur instead of deadlocking.
 }
 
@@ -138,7 +143,10 @@ void XenomaiMutex::unlock(bool recurred) {
 XenomaiConditionVariable::XenomaiConditionVariable() {
     xprintf("Construct CondictionVariable\n");
     if (int ret = __wrap_pthread_cond_init(&cond, NULL)) {
-        if (EPERM == ret) {
+        if (EPERM != ret) {
+            xprintf("__wrap_thread_cond_init failed with %d %s\n", ret, strerror(ret));
+            return;
+        } else {
             xprintf("mutex init returned EPERM\n");
             initialize_xenomai();
             if (int ret = __wrap_pthread_cond_init(&cond, NULL)) {
@@ -146,7 +154,6 @@ XenomaiConditionVariable::XenomaiConditionVariable() {
                 return;
             }
         }
-        return;
     }
     enabled = true;
 }
