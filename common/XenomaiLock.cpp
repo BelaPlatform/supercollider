@@ -51,11 +51,12 @@ static void initializeXenomai() {
 }
 
 static bool turnIntoCobaltThread(bool recurred = false) {
-    int current_mode = cobalt_thread_mode();
     struct sched_param param;
     memset(&param, 0, sizeof(param));
     int policy;
-    int ret = pthread_getschedparam(pthread_self(), &policy, &param);
+    // Guaranteed to succeed as pthread_self() cannot fail and pthread_getschedparam()'s only error condition is when
+    // the given thread does not exist.
+    pthread_getschedparam(pthread_self(), &policy, &param);
     pid_t tid = getTid();
 
     if (int ret = __wrap_sched_setscheduler(tid, policy, &param)) {
