@@ -102,11 +102,11 @@ public:
 
 static InterfaceTable* ft;
 
-static inline void BelaUgen_init_output(Unit* unit) { (unit->mCalcFunc)(unit, 1); }
+static inline void belaUGenInitOutput(Unit* unit) { (unit->mCalcFunc)(unit, 1); }
 
-static inline void BelaUgen_disable(Unit* unit) {
+static inline void belaUGenDisable(Unit* unit) {
     SETCALC(ClearUnitOutputs);
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 struct MultiplexAnalogIn : public Unit {};
@@ -276,7 +276,7 @@ void MultiplexAnalogIn_Ctor(MultiplexAnalogIn* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
     if (!context->multiplexerChannels) {
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
         rt_fprintf(stderr, "MultiplexAnalogIn Error: the UGen needs BELA Multiplexer Capelet enabled\n");
         return;
     }
@@ -304,7 +304,7 @@ void MultiplexAnalogIn_Ctor(MultiplexAnalogIn* unit) {
         }
         SETCALC(MultiplexAnalogIn_next_kkk);
     }
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -381,7 +381,7 @@ void AnalogIn_Ctor(AnalogIn* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
     if (!context->analogInChannels) {
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
         rt_fprintf(stderr, "AnalogIn Error: the UGen needs BELA analog inputs enabled\n");
         return;
     }
@@ -402,7 +402,7 @@ void AnalogIn_Ctor(AnalogIn* unit) {
         }
         SETCALC(AnalogIn_next_kk);
     }
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -481,7 +481,7 @@ void AnalogOut_Ctor(AnalogOut* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
     if (!context->analogOutChannels) {
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
         rt_fprintf(stderr, "AnalogOut Error: the UGen needs BELA analog outputs enabled\n");
         return;
     }
@@ -512,7 +512,7 @@ void AnalogOut_Ctor(AnalogOut* unit) {
         }
         SETCALC(AnalogOut_next_kk);
     }
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -548,7 +548,7 @@ void DigitalIn_Ctor(DigitalIn* unit) {
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
         rt_fprintf(stderr, "DigitalIn error: digital pin must be between %i and %i, it is %i\n", 0,
                    context->digitalChannels, unit->mDigitalPin);
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
         return;
     }
     pinMode(context, 0, unit->mDigitalPin, INPUT);
@@ -558,7 +558,7 @@ void DigitalIn_Ctor(DigitalIn* unit) {
     } else {
         SETCALC(DigitalIn_next_k);
     }
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -619,7 +619,7 @@ void DigitalOut_Ctor(DigitalOut* unit) {
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
         rt_fprintf(stderr, "DigitalOut error: digital pin must be between %i and %i, it is %i \n", 0,
                    context->digitalChannels, unit->mDigitalPin);
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
     }
     // initialize first buffer
     pinMode(context, 0, unit->mDigitalPin, OUTPUT);
@@ -639,7 +639,7 @@ void DigitalOut_Ctor(DigitalOut* unit) {
         }
         SETCALC(DigitalOut_next_k);
     }
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1090,7 +1090,7 @@ void DigitalIO_Ctor(DigitalIO* unit) {
         SETCALC(DigitalIO_next_kk);
     }
 #endif // BELA_SIMPLIFIED_DIGITALIO
-    BelaUgen_init_output(unit);
+    belaUGenInitOutput(unit);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1123,7 +1123,7 @@ void BelaScopeOut_Ctor(BelaScopeOut* unit) {
     BelaScope* scope = unit->mWorld->mBelaScope;
     if (!scope || !scope->buffer) {
         rt_fprintf(stderr, "BelaScopeOut error: Scope not initialized on server\n");
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
         return;
     };
 
@@ -1139,7 +1139,7 @@ void BelaScopeOut_Ctor(BelaScopeOut* unit) {
     }
     unit->numScopeChannels = sc_min(numInputSignals, maxScopeChannels - unit->offset);
     if (unit->numScopeChannels <= 0) {
-        BelaUgen_disable(unit);
+        belaUGenDisable(unit);
     } else {
         BelaScopeOut_next(unit, 1);
         SETCALC(BelaScopeOut_next);
