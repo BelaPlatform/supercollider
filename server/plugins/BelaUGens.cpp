@@ -35,26 +35,26 @@ int rt_fprintf(FILE* stream, const char* format, ...);
 
 class AccessBuffer {
 protected:
-    AccessBuffer(float* buffer, unsigned int count): buffer(buffer), count(count), last(buffer[count - 1]) {}
+    AccessBuffer(float* buffer, unsigned int count): m_buffer(buffer), m_count(count), m_last(buffer[count - 1]) {}
     const float& at(unsigned int n) const {
-        if (n < count)
-            return buffer[n];
+        if (n < m_count)
+            return m_buffer[n];
         else
-            return last;
+            return m_last;
     }
     float& at(unsigned int n) {
-        if (n < count)
-            return buffer[n];
+        if (n < m_count)
+            return m_buffer[n];
         else
-            return last;
+            return m_last;
     }
-    void updateBufferWithLast() { buffer[count - 1] = last; }
-    unsigned int count() const { return count; }
+    void updateBufferWithLast() { m_buffer[m_count - 1] = m_last; }
+    unsigned int count() const { return m_count; }
 
 private:
-    float* buffer;
-    float last;
-    const unsigned int count;
+    float* m_buffer;
+    float m_last;
+    const unsigned int m_count;
 };
 
 // Two buffer views which on which you can call [] for arbitrarily large numbers, but
@@ -77,21 +77,21 @@ private:
 
 class AccessBufferWriter : public AccessBuffer {
 public:
-    AccessBufferWriter(float* buffer, unsigned int count): AccessBuffer(buffer, count), lastTouched(false) {};
+    AccessBufferWriter(float* buffer, unsigned int count): AccessBuffer(buffer, count), m_lastTouched(false) {};
     ~AccessBufferWriter() {
         // calling [], you may have been passed a reference to last instead of
         // a pointer into the buffer itself. Here, we ensure we put it back into the buffer
-        if (lastTouched)
+        if (m_lastTouched)
             updateBufferWithLast();
     }
     float& operator[](unsigned int n) {
         if (n >= count())
-            lastTouched = true;
+            m_lastTouched = true;
         return at(n);
     }
 
 private:
-    bool lastTouched;
+    bool m_lastTouched;
 };
 
 class AccessBufferReader : public AccessBuffer {
