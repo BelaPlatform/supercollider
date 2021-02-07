@@ -43,6 +43,10 @@ int rt_vprintf(const char* format, va_list ap);
 // Xenomai-specific includes
 #include <sys/mman.h>
 
+#if (BELA_MAJOR_VERSION == 1 && BELA_MINOR_VERSION < 9)
+#    error You need at least Bela API 1.9
+#endif
+
 using namespace std;
 
 int32 server_timeseed() { return timeSeed(); }
@@ -309,29 +313,15 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
 
 // ====================================================================
 
-// HW_DETECT_HACK: these functionalities should instead be exposed by libbela
-typedef struct _BelaHwConfig // HW_DETECT_HACK
-{
-    float audioSampleRate;
-    unsigned int audioInChannels;
-    unsigned int audioOutChannels;
-    unsigned int analogInChannels;
-    unsigned int analogOutChannels;
-    void* activeCodec;
-    void* disabledCodec;
-} BelaHwConfig;
-int Bela_getHwConfig(BelaHw hw, BelaHwConfig* cfg); // HW_DETECT_HACK
 bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     BelaInitSettings* settings = Bela_InitSettings_alloc();
     Bela_defaultSettings(settings);
     settings->setup = sc_belaSetup;
     settings->render = sc_belaRender;
-#if (BELA_MAJOR_VERSION == 1 && BELA_MINOR_VERSION >= 8) || (BELA_MAJOR_VERSION > 1)
     // if the feature is supported on Bela, add a callback to be called when
     // the audio thread stops. This is useful e.g.: to gracefully exit from
     // scsynth when pressing the Bela button
     settings->audioThreadDone = sc_belaAudioThreadDone;
-#endif // BELA >= 1.8
     settings->interleave = 0;
     settings->uniformSampleRate = 1;
     settings->analogOutputsPersist = 0;
@@ -365,10 +355,9 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // Currently (as of 1.4.0) the Bela API does not allow to
     // know the number of audio channels available.
 
-    BelaHwConfig cfg;
-    Bela_getHwConfig(Bela_detectHw(), &cfg);
-    int extraAudioIn = mWorld->mNumInputs - cfg.audioInChannels;
-    int extraAudioOut = mWorld->mNumOutputs - cfg.audioOutChannels;
+    BelaHwConfig* cfg = Bela_HwConfig_new(Bela_detectHw());
+    int extraAudioIn = mWorld->mNumInputs - cfg->audioInChannels;
+    int extraAudioOut = mWorld->mNumOutputs - cfg->audioOutChannels;
     // if we need more audio channels than there actually are audio
     // channels, make sure we have some extra analogs
     if (extraAudioIn > 0) {
@@ -414,13 +403,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // enable the audio expander capelet for the first few "analog as audio" channels
     // inputs and ...
     for (int n = 0; n < extraAudioIn; ++n) {
-        printf("Using analog in %d as audio in %d\n", n, n + cfg.audioInChannels);
+        printf("Using analog in %d as audio in %d\n", n, n + cfg->audioInChannels);
         settings->audioExpanderInputs |= (1 << n);
     }
 
     // ... outputs
     for (int n = 0; n < extraAudioOut; ++n) {
-        printf("Using analog out %d as audio out %d\n", n, n + cfg.audioOutChannels);
+        printf("Using analog out %d as audio out %d\n", n, n + cfg->audioOutChannels);
         settings->audioExpanderOutputs |= (1 << n);
     }
 
@@ -484,6 +473,7 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     *outNumSamples = settings->periodSize;
     *outSampleRate = gBelaSampleRate;
     Bela_InitSettings_free(settings);
+    Bela_HwConfig_delete(cfg);
 
     // Set up interrupt handler to catch Control-C and SIGTERM
     signal(SIGINT, sc_belaSignal);
