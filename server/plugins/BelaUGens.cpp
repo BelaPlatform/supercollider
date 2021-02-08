@@ -149,9 +149,9 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
         int muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
+            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
                        context->analogInChannels, analogPin);
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
+            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
                        context->multiplexerChannels, muxChannel);
         } else {
             // is there something like NI? analogReadNI(context, 0, analogPin);
@@ -174,9 +174,9 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
         int analogPin = static_cast<int>(fin[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
+            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
                        context->analogInChannels, analogPin);
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
+            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
                        context->multiplexerChannels, muxChannel);
         } else {
             // is there something like NI? analogReadNI(context, 0, analogPin);
@@ -199,9 +199,9 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
         int muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
+            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
                        context->analogInChannels, analogPin);
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
+            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
                        context->multiplexerChannels, muxChannel);
         } else {
             // is there something like NI? analogReadNI(context, 0, analogPin);
@@ -220,9 +220,9 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
         || (muxChannel >= context->multiplexerChannels)) {
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
+        rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
                    context->analogInChannels, analogPin);
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
+        rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
                    context->multiplexerChannels, muxChannel);
         for (unsigned int n = 0; n < inNumSamples; n++) {
             out[n] = 0;
@@ -242,11 +242,11 @@ void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
     int muxChannel = static_cast<float>(IN0(1));
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels)) {
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
+        rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
                    context->analogInChannels, analogPin);
         OUT0(0) = 0.0;
     } else if ((muxChannel < 0) || (muxChannel >= context->multiplexerChannels)) {
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
+        rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
                    context->multiplexerChannels, muxChannel);
         OUT0(0) = 0.0;
     } else {
@@ -296,7 +296,7 @@ static bool updatePin(unsigned int numChannels, unsigned int newPin, int* oldPin
     if (newPin != *oldPin) {
         *oldPin = newPin;
         if (!isValid) {
-            rt_fprintf(stderr, "%s warning: pin must be 0 <= pin <= %i, it is %i \n", label, numChannels - 1, newPin);
+            rt_fprintf(stderr, "%s warning: pin must be 0 <= pin <= %i, it is %i\n", label, numChannels - 1, newPin);
         }
     }
     return isValid;
@@ -573,7 +573,7 @@ void DigitalOut_Ctor(DigitalOut* unit) {
     unit->mLastOut = 0;
 
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalOut error: digital pin must be between %i and %i, it is %i \n", 0,
+        rt_fprintf(stderr, "DigitalOut error: digital pin must be between %i and %i, it is %i\n", 0,
                    context->digitalChannels, unit->mDigitalPin);
         belaUGenDisable(unit);
     }
