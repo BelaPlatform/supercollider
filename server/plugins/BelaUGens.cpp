@@ -148,8 +148,8 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
 
     // context->audioFrames should be equal to inNumSamples
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        analogPin = (int)fin[n];
-        muxChannel = (int)fmux[n];
+        analogPin = static_cast<int>(fin[n]);
+        muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -169,14 +169,14 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
     BelaContext* context = world->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
-    int muxChannel = (float)IN0(1);
+    int muxChannel = static_cast<float>(IN0(1));
     float* out = ZOUT(0);
     int analogPin = 0;
     float analogValue = 0;
 
     // context->audioFrames should be equal to inNumSamples
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        analogPin = (int)fin[n];
+        analogPin = static_cast<int>(fin[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -195,7 +195,7 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (float)IN0(0);
+    int analogPin = static_cast<float>(IN0(0));
     float* fmux = IN(1); // mux channel, can be modulated
     float* out = ZOUT(0);
     int muxChannel = 0;
@@ -203,7 +203,7 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
 
     // context->audioFrames should be equal to inNumSamples
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        muxChannel = (int)fmux[n];
+        muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -222,8 +222,8 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (float)IN0(0);
-    int muxChannel = (float)IN0(1);
+    int analogPin = static_cast<float>(IN0(0));
+    int muxChannel = static_cast<float>(IN0(1));
     float* out = ZOUT(0);
     float analogValue = 0;
 
@@ -249,8 +249,8 @@ void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (float)IN0(0);
-    int muxChannel = (float)IN0(1);
+    int analogPin = static_cast<float>(IN0(0));
+    int muxChannel = static_cast<float>(IN0(1));
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels)) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -328,7 +328,7 @@ void AnalogIn_next_aa(AnalogIn* unit, int inNumSamples) {
     float analogValue = 0;
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        int analogPin = (int)fin[n];
+        int analogPin = static_cast<int>(fin[n]);
         if (AnalogIn_updatePin(unit, analogPin)) {
             analogValue = analogReadNI(context, n, analogPin);
         }
@@ -340,7 +340,7 @@ void AnalogIn_next_ak(AnalogIn* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (int)IN0(0);
+    int analogPin = static_cast<int>(IN0(0));
     float* out = ZOUT(0);
     float analogValue = 0;
 
@@ -361,7 +361,7 @@ void AnalogIn_next_kk(AnalogIn* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (int)IN0(0);
+    int analogPin = static_cast<int>(IN0(0));
 
     if (AnalogIn_updatePin(unit, analogPin)) {
         ZOUT0(0) = analogReadNI(context, 0, analogPin);
@@ -417,7 +417,7 @@ void AnalogOut_next_aaa(AnalogOut* unit, int inNumSamples) {
     float newinput = 0;
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        analogPin = (int)fin[n];
+        analogPin = static_cast<int>(fin[n]);
         if (AnalogOut_updatePin(unit, analogPin)) {
             newinput = in[n]; // read next input sample
             analogWriteOnceNI(context, n, unit->mAnalogPin, newinput);
@@ -429,7 +429,7 @@ void AnalogOut_next_aka(AnalogOut* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (int)IN0(0); // analog in pin, can be modulated
+    int analogPin = static_cast<int>(IN0(0)); // analog in pin, can be modulated
     float* in = IN(1);
 
     float newinput = 0;
@@ -451,7 +451,7 @@ void AnalogOut_next_aak(AnalogOut* unit, int inNumSamples) {
     int analogPin = 0;
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        analogPin = (int)fin[n];
+        analogPin = static_cast<int>(fin[n]);
         if (AnalogOut_updatePin(unit, analogPin)) {
             analogWriteOnceNI(context, n, unit->mAnalogPin, in);
         }
@@ -462,7 +462,7 @@ void AnalogOut_next_kk(AnalogOut* unit, int inNumSamples) {
     World* world = unit->mWorld;
     BelaContext* context = world->mBelaContext;
 
-    int analogPin = (int)IN0(0); // analog in pin, can be modulated
+    int analogPin = static_cast<int>(IN0(0)); // analog in pin, can be modulated
     float in = IN0(1);
 
     if (AnalogOut_updatePin(unit, analogPin)) {
@@ -520,7 +520,7 @@ void DigitalIn_next_a(DigitalIn* unit, int inNumSamples) {
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
         digitalValue = digitalRead(context, n, pinid);
-        *++out = (float)digitalValue;
+        *++out = static_cast<float>(digitalValue);
     }
 }
 
@@ -530,14 +530,14 @@ void DigitalIn_next_k(DigitalIn* unit, int inNumSamples) {
 
     int pinid = unit->mDigitalPin;
     int digitalValue = digitalRead(context, 0, pinid);
-    ZOUT0(0) = (float)digitalValue;
+    ZOUT0(0) = static_cast<float>(digitalValue);
 }
 
 void DigitalIn_Ctor(DigitalIn* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
     float fDigitalIn = ZIN0(0); // digital in pin -- cannot change after construction
-    unit->mDigitalPin = (int)fDigitalIn;
+    unit->mDigitalPin = static_cast<int>(fDigitalIn);
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
         rt_fprintf(stderr, "DigitalIn error: digital pin must be between %i and %i, it is %i\n", 0,
                    context->digitalChannels, unit->mDigitalPin);
@@ -606,7 +606,7 @@ void DigitalOut_Ctor(DigitalOut* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
     float fDigital = ZIN0(0); // digital in pin -- cannot change after construction
-    unit->mDigitalPin = (int)fDigital;
+    unit->mDigitalPin = static_cast<int>(fDigital);
     unit->mLastOut = 0;
 
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
@@ -673,7 +673,7 @@ void DigitalIO_next_universal(DigitalIO* unit, int inNumSamples) {
     // with properly initialised AccessBuffers, we can use [n] below regardless
     // of the K/A rate of each buffer
     for (unsigned int n = 0; n < inNumSamples; ++n) {
-        unsigned int pin = (int)pins[n];
+        unsigned int pin = static_cast<int>(pins[n]);
         if (DigitalIO_updatePin(unit, pin)) {
             int mode = parseDigitalMode(modes[n]);
             if (1 == inNumSamples) {
