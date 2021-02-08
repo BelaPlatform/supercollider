@@ -141,14 +141,12 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
     float* fin = IN(0); // analog in pin, can be modulated
     float* fmux = IN(1); // mux channel, can be modulated
     float* out = OUT(0);
-    int analogPin = 0;
-    int muxChannel = 0;
     float analogValue = 0;
 
     // context->audioFrames should be equal to inNumSamples
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        analogPin = static_cast<int>(fin[n]);
-        muxChannel = static_cast<int>(fmux[n]);
+        int analogPin = static_cast<int>(fin[n]);
+        int muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -167,14 +165,13 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
     auto* context = unit->mWorld->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
-    int muxChannel = static_cast<float>(IN0(1));
     float* out = OUT(0);
-    int analogPin = 0;
     float analogValue = 0;
+    int muxChannel = static_cast<int>(IN0(1));
 
     // context->audioFrames should be equal to inNumSamples
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        analogPin = static_cast<int>(fin[n]);
+        int analogPin = static_cast<int>(fin[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -192,15 +189,14 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
 void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
     auto* context = unit->mWorld->mBelaContext;
 
-    int analogPin = static_cast<float>(IN0(0));
     float* fmux = IN(1); // mux channel, can be modulated
     float* out = OUT(0);
-    int muxChannel = 0;
+    int analogPin = static_cast<int>(IN0(0));
     float analogValue = 0;
 
     // context->audioFrames should be equal to inNumSamples
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        muxChannel = static_cast<int>(fmux[n]);
+        int muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
@@ -221,7 +217,6 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
     int analogPin = static_cast<float>(IN0(0));
     int muxChannel = static_cast<float>(IN0(1));
     float* out = OUT(0);
-    float analogValue = 0;
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
         || (muxChannel >= context->multiplexerChannels)) {
@@ -235,8 +230,7 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
             // is there something like NI? analogReadNI(context, 0, analogPin);
-            analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
-            out[n] = analogValue;
+            out[n] = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
     }
 }
