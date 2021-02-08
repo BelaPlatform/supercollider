@@ -141,7 +141,7 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
 
     float* fin = IN(0); // analog in pin, can be modulated
     float* fmux = IN(1); // mux channel, can be modulated
-    float* out = ZOUT(0);
+    float* out = OUT(0);
     int analogPin = 0;
     int muxChannel = 0;
     float analogValue = 0;
@@ -160,7 +160,7 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
-        *++out = analogValue;
+        out[n] = analogValue;
     }
 }
 
@@ -170,7 +170,7 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
 
     float* fin = IN(0); // analog in pin, can be modulated
     int muxChannel = static_cast<float>(IN0(1));
-    float* out = ZOUT(0);
+    float* out = OUT(0);
     int analogPin = 0;
     float analogValue = 0;
 
@@ -187,7 +187,7 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
-        *++out = analogValue;
+        out[n] = analogValue;
     }
 }
 
@@ -197,7 +197,7 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
 
     int analogPin = static_cast<float>(IN0(0));
     float* fmux = IN(1); // mux channel, can be modulated
-    float* out = ZOUT(0);
+    float* out = OUT(0);
     int muxChannel = 0;
     float analogValue = 0;
 
@@ -214,7 +214,7 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
-        *++out = analogValue;
+        out[n] = analogValue;
     }
 }
 
@@ -224,7 +224,7 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
 
     int analogPin = static_cast<float>(IN0(0));
     int muxChannel = static_cast<float>(IN0(1));
-    float* out = ZOUT(0);
+    float* out = OUT(0);
     float analogValue = 0;
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
@@ -234,13 +234,13 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
                    context->multiplexerChannels, muxChannel);
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            *++out = 0;
+            out[n] = 0;
         }
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
-            *++out = analogValue;
+            out[n] = analogValue;
         }
     }
 }
@@ -255,13 +255,13 @@ void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
     if ((analogPin < 0) || (analogPin >= context->analogInChannels)) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
                    context->analogInChannels, analogPin);
-        ZOUT0(0) = 0.0;
+        OUT0(0) = 0.0;
     } else if ((muxChannel < 0) || (muxChannel >= context->multiplexerChannels)) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
                    context->multiplexerChannels, muxChannel);
-        ZOUT0(0) = 0.0;
+        OUT0(0) = 0.0;
     } else {
-        ZOUT0(0) = multiplexerAnalogRead(context, analogPin, muxChannel);
+        OUT0(0) = multiplexerAnalogRead(context, analogPin, muxChannel);
     }
 }
 
@@ -324,7 +324,7 @@ void AnalogIn_next_aa(AnalogIn* unit, int inNumSamples) {
     BelaContext* context = world->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
-    float* out = ZOUT(0);
+    float* out = OUT(0);
     float analogValue = 0;
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
@@ -332,7 +332,7 @@ void AnalogIn_next_aa(AnalogIn* unit, int inNumSamples) {
         if (AnalogIn_updatePin(unit, analogPin)) {
             analogValue = analogReadNI(context, n, analogPin);
         }
-        *++out = analogValue;
+        out[n] = analogValue;
     }
 }
 
@@ -341,17 +341,17 @@ void AnalogIn_next_ak(AnalogIn* unit, int inNumSamples) {
     BelaContext* context = world->mBelaContext;
 
     int analogPin = static_cast<int>(IN0(0));
-    float* out = ZOUT(0);
+    float* out = OUT(0);
     float analogValue = 0;
 
     if (AnalogIn_updatePin(unit, analogPin)) {
         for (unsigned int n = 0; n < inNumSamples; n++) {
             analogValue = analogReadNI(context, n, analogPin);
-            *++out = analogValue;
+            out[n] = analogValue;
         }
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            *++out = 0.0;
+            out[n] = 0;
         }
     }
 }
@@ -364,9 +364,9 @@ void AnalogIn_next_kk(AnalogIn* unit, int inNumSamples) {
     int analogPin = static_cast<int>(IN0(0));
 
     if (AnalogIn_updatePin(unit, analogPin)) {
-        ZOUT0(0) = analogReadNI(context, 0, analogPin);
+        OUT0(0) = analogReadNI(context, 0, analogPin);
     } else {
-        ZOUT0(0) = 0.0;
+        OUT0(0) = 0.0;
     }
 }
 
@@ -516,11 +516,11 @@ void DigitalIn_next_a(DigitalIn* unit, int inNumSamples) {
 
     int pinid = unit->mDigitalPin;
     int digitalValue;
-    float* out = ZOUT(0);
+    float* out = OUT(0);
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
         digitalValue = digitalRead(context, n, pinid);
-        *++out = static_cast<float>(digitalValue);
+        out[n] = static_cast<float>(digitalValue);
     }
 }
 
@@ -530,13 +530,13 @@ void DigitalIn_next_k(DigitalIn* unit, int inNumSamples) {
 
     int pinid = unit->mDigitalPin;
     int digitalValue = digitalRead(context, 0, pinid);
-    ZOUT0(0) = static_cast<float>(digitalValue);
+    OUT0(0) = static_cast<float>(digitalValue);
 }
 
 void DigitalIn_Ctor(DigitalIn* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
-    float fDigitalIn = ZIN0(0); // digital in pin -- cannot change after construction
+    float fDigitalIn = IN0(0); // digital in pin -- cannot change after construction
     unit->mDigitalPin = static_cast<int>(fDigitalIn);
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
         rt_fprintf(stderr, "DigitalIn error: digital pin must be between %i and %i, it is %i\n", 0,
@@ -605,7 +605,7 @@ void DigitalOut_next_k(DigitalOut* unit, int inNumSamples) {
 void DigitalOut_Ctor(DigitalOut* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
-    float fDigital = ZIN0(0); // digital in pin -- cannot change after construction
+    float fDigital = IN0(0); // digital in pin -- cannot change after construction
     unit->mDigitalPin = static_cast<int>(fDigital);
     unit->mLastOut = 0;
 
@@ -729,11 +729,11 @@ void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
     // input 0: channelOffset
     // inputs 1 to numInputs-1 : signal inputs
     for (unsigned int ch = 0; ch < numChannels; ++ch)
-        inputPointers[ch] = ZIN(ch + 1); // skip ZIN(0)
+        inputPointers[ch] = IN(ch + 1); // skip IN(0)
 
     for (unsigned int frame = unit->offset; frame < scopeBufferSamples; frame += maxChannels)
         for (unsigned int ch = 0; ch < numChannels; ++ch)
-            scopeBuffer[frame + ch] += ZXP(inputPointers[ch]);
+            scopeBuffer[frame + ch] += *inputPointers[ch]++;
     unit->mWorld->mBelaScope->touched = true;
 }
 
@@ -745,7 +745,7 @@ void BelaScopeOut_Ctor(BelaScopeOut* unit) {
         return;
     };
 
-    int offset = static_cast<int>(ZIN0(0));
+    int offset = static_cast<int>(IN0(0));
     unit->offset = static_cast<unsigned int>(offset < 0 ? 0 : offset);
     uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
     uint32 numInputSignals = unit->mNumInputs - 1;
