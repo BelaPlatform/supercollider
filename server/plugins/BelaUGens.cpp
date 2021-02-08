@@ -136,8 +136,7 @@ struct DigitalIO : public Unit {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
     float* fmux = IN(1); // mux channel, can be modulated
@@ -165,8 +164,7 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
 }
 
 void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
     int muxChannel = static_cast<float>(IN0(1));
@@ -192,8 +190,7 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
 }
 
 void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<float>(IN0(0));
     float* fmux = IN(1); // mux channel, can be modulated
@@ -219,8 +216,7 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
 }
 
 void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<float>(IN0(0));
     int muxChannel = static_cast<float>(IN0(1));
@@ -246,8 +242,7 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
 }
 
 void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<float>(IN0(0));
     int muxChannel = static_cast<float>(IN0(1));
@@ -320,8 +315,7 @@ bool AnalogIn_updatePin(AnalogIn* unit, int newPin) {
 }
 
 void AnalogIn_next_aa(AnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
     float* out = OUT(0);
@@ -337,8 +331,7 @@ void AnalogIn_next_aa(AnalogIn* unit, int inNumSamples) {
 }
 
 void AnalogIn_next_ak(AnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<int>(IN0(0));
     float* out = OUT(0);
@@ -358,8 +351,7 @@ void AnalogIn_next_ak(AnalogIn* unit, int inNumSamples) {
 
 
 void AnalogIn_next_kk(AnalogIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<int>(IN0(0));
 
@@ -407,8 +399,7 @@ bool AnalogOut_updatePin(AnalogOut* unit, int newPin) {
 }
 
 void AnalogOut_next_aaa(AnalogOut* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
     float* in = IN(1);
@@ -426,8 +417,7 @@ void AnalogOut_next_aaa(AnalogOut* unit, int inNumSamples) {
 }
 
 void AnalogOut_next_aka(AnalogOut* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<int>(IN0(0)); // analog in pin, can be modulated
     float* in = IN(1);
@@ -442,8 +432,7 @@ void AnalogOut_next_aka(AnalogOut* unit, int inNumSamples) {
 }
 
 void AnalogOut_next_aak(AnalogOut* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     float* fin = IN(0); // analog in pin, can be modulated
     float in = IN0(1);
@@ -459,8 +448,7 @@ void AnalogOut_next_aak(AnalogOut* unit, int inNumSamples) {
 }
 
 void AnalogOut_next_kk(AnalogOut* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int analogPin = static_cast<int>(IN0(0)); // analog in pin, can be modulated
     float in = IN0(1);
@@ -511,8 +499,7 @@ void AnalogOut_Ctor(AnalogOut* unit) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DigitalIn_next_a(DigitalIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int pinid = unit->mDigitalPin;
     int digitalValue;
@@ -525,8 +512,7 @@ void DigitalIn_next_a(DigitalIn* unit, int inNumSamples) {
 }
 
 void DigitalIn_next_k(DigitalIn* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int pinid = unit->mDigitalPin;
     int digitalValue = digitalRead(context, 0, pinid);
@@ -557,8 +543,7 @@ void DigitalIn_Ctor(DigitalIn* unit) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DigitalOut_next_a(DigitalOut* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int pinid = unit->mDigitalPin;
     float* in = IN(1);
@@ -583,8 +568,7 @@ void DigitalOut_next_a(DigitalOut* unit, int inNumSamples) {
 }
 
 void DigitalOut_next_k(DigitalOut* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
 
     int pinid = unit->mDigitalPin;
     float in = IN0(1);
