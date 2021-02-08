@@ -147,7 +147,6 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
     float analogValue = 0;
 
     // context->audioFrames should be equal to inNumSamples
-    //   for(unsigned int n = 0; n < context->audioFrames; n++) {
     for (unsigned int n = 0; n < inNumSamples; n++) {
         analogPin = (int)fin[n];
         muxChannel = (int)fmux[n];
@@ -158,8 +157,8 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
                        context->multiplexerChannels, muxChannel);
         } else {
-            analogValue = multiplexerAnalogRead(
-                context, analogPin, muxChannel); // is there something like NI? analogReadNI(context, 0, analogPin);
+            // is there something like NI? analogReadNI(context, 0, analogPin);
+            analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
         *++out = analogValue;
     }
@@ -185,8 +184,8 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
                        context->multiplexerChannels, muxChannel);
         } else {
-            analogValue = multiplexerAnalogRead(
-                context, analogPin, muxChannel); // is there something like NI? analogReadNI(context, 0, analogPin);
+            // is there something like NI? analogReadNI(context, 0, analogPin);
+            analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
         *++out = analogValue;
     }
@@ -212,8 +211,8 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
                        context->multiplexerChannels, muxChannel);
         } else {
-            analogValue = multiplexerAnalogRead(
-                context, analogPin, muxChannel); // is there something like NI? analogReadNI(context, 0, analogPin);
+            // is there something like NI? analogReadNI(context, 0, analogPin);
+            analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
         }
         *++out = analogValue;
     }
@@ -239,8 +238,8 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
         }
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            analogValue = multiplexerAnalogRead(
-                context, analogPin, muxChannel); // is there something like NI? analogReadNI(context, 0, analogPin);
+            // is there something like NI? analogReadNI(context, 0, analogPin);
+            analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
             *++out = analogValue;
         }
     }
@@ -262,8 +261,7 @@ void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
                    context->multiplexerChannels, muxChannel);
         ZOUT0(0) = 0.0;
     } else {
-        ZOUT0(0) = multiplexerAnalogRead(
-            context, analogPin, muxChannel); // is there something like NI? analogReadNI(context, 0, analogPin);
+        ZOUT0(0) = multiplexerAnalogRead(context, analogPin, muxChannel);
     }
 }
 
