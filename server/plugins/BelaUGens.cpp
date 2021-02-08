@@ -23,12 +23,8 @@
  *  https://www.nescivi.eu
  */
 
-#include <atomic>
-
 #include "Bela.h"
-// These functions are provided by xenomai
-int rt_printf(const char* format, ...);
-int rt_fprintf(FILE* stream, const char* format, ...);
+#include "cobalt/stdio.h"
 
 #include "SC_PlugIn.h"
 
