@@ -329,12 +329,10 @@ void AnalogIn_next_ak(AnalogIn* unit, int inNumSamples) {
 
     int analogPin = static_cast<int>(IN0(0));
     float* out = OUT(0);
-    float analogValue = 0;
 
     if (AnalogIn_updatePin(unit, analogPin)) {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            analogValue = analogReadNI(context, n, analogPin);
-            out[n] = analogValue;
+            out[n] = analogReadNI(context, n, analogPin);
         }
     } else {
         for (unsigned int n = 0; n < inNumSamples; n++) {
@@ -398,14 +396,11 @@ void AnalogOut_next_aaa(AnalogOut* unit, int inNumSamples) {
     float* fin = IN(0); // analog in pin, can be modulated
     float* in = IN(1);
 
-    int analogPin = 0;
-    float newinput = 0;
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        analogPin = static_cast<int>(fin[n]);
+        int analogPin = static_cast<int>(fin[n]);
         if (AnalogOut_updatePin(unit, analogPin)) {
-            newinput = in[n]; // read next input sample
-            analogWriteOnceNI(context, n, unit->mAnalogPin, newinput);
+            analogWriteOnceNI(context, n, unit->mAnalogPin, in[n]);
         }
     }
 }
@@ -416,11 +411,9 @@ void AnalogOut_next_aka(AnalogOut* unit, int inNumSamples) {
     int analogPin = static_cast<int>(IN0(0)); // analog in pin, can be modulated
     float* in = IN(1);
 
-    float newinput = 0;
     if (AnalogOut_updatePin(unit, analogPin)) {
         for (unsigned int n = 0; n < inNumSamples; n++) {
-            newinput = in[n]; // read next input sample
-            analogWriteOnceNI(context, n, unit->mAnalogPin, newinput);
+            analogWriteOnceNI(context, n, unit->mAnalogPin, in[n]);
         }
     }
 }
@@ -431,10 +424,9 @@ void AnalogOut_next_aak(AnalogOut* unit, int inNumSamples) {
     float* fin = IN(0); // analog in pin, can be modulated
     float in = IN0(1);
 
-    int analogPin = 0;
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        analogPin = static_cast<int>(fin[n]);
+        int analogPin = static_cast<int>(fin[n]);
         if (AnalogOut_updatePin(unit, analogPin)) {
             analogWriteOnceNI(context, n, unit->mAnalogPin, in);
         }
@@ -496,12 +488,10 @@ void DigitalIn_next_a(DigitalIn* unit, int inNumSamples) {
     auto* context = unit->mWorld->mBelaContext;
 
     int pinid = unit->mDigitalPin;
-    int digitalValue;
     float* out = OUT(0);
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
-        digitalValue = digitalRead(context, n, pinid);
-        out[n] = static_cast<float>(digitalValue);
+        out[n] = static_cast<float>(digitalRead(context, n, pinid));
     }
 }
 
@@ -509,15 +499,13 @@ void DigitalIn_next_k(DigitalIn* unit, int inNumSamples) {
     auto* context = unit->mWorld->mBelaContext;
 
     int pinid = unit->mDigitalPin;
-    int digitalValue = digitalRead(context, 0, pinid);
-    OUT0(0) = static_cast<float>(digitalValue);
+    OUT0(0) = static_cast<float>(digitalRead(context, 0, pinid));
 }
 
 void DigitalIn_Ctor(DigitalIn* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
-    float fDigitalIn = IN0(0); // digital in pin -- cannot change after construction
-    unit->mDigitalPin = static_cast<int>(fDigitalIn);
+    unit->mDigitalPin = static_cast<int>(IN0(1)); // digital in pin -- cannot change after construction
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
         rt_fprintf(stderr, "DigitalIn error: digital pin must be between %i and %i, it is %i\n", 0,
                    context->digitalChannels, unit->mDigitalPin);
@@ -541,13 +529,11 @@ void DigitalOut_next_a(DigitalOut* unit, int inNumSamples) {
 
     int pinid = unit->mDigitalPin;
     float* in = IN(1);
-
-    float newinput = 0;
     int lastOut = unit->mLastOut;
 
     for (unsigned int n = 0; n < inNumSamples; n++) {
         // read input
-        newinput = in[n];
+        float newinput = in[n];
         if (newinput > 0.5) {
             if (lastOut == 0) {
                 lastOut = 1;
@@ -566,8 +552,8 @@ void DigitalOut_next_k(DigitalOut* unit, int inNumSamples) {
 
     int pinid = unit->mDigitalPin;
     float in = IN0(1);
-
     int lastOut = unit->mLastOut;
+
     if (in > 0.5) {
         if (lastOut == 0) {
             lastOut = 1;
@@ -583,8 +569,7 @@ void DigitalOut_next_k(DigitalOut* unit, int inNumSamples) {
 void DigitalOut_Ctor(DigitalOut* unit) {
     BelaContext* context = unit->mWorld->mBelaContext;
 
-    float fDigital = IN0(0); // digital in pin -- cannot change after construction
-    unit->mDigitalPin = static_cast<int>(fDigital);
+    unit->mDigitalPin = static_cast<int>(IN0(0)); // digital in pin -- cannot change after construction
     unit->mLastOut = 0;
 
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
@@ -623,16 +608,10 @@ bool DigitalIO_updatePin(DigitalIO* unit, int newPin) {
 
 static int parseDigitalValue(float value) { return value > 0.5; }
 
-static int parseDigitalMode(float mode) {
-    if (mode < 0.5)
-        return INPUT;
-    else
-        return OUTPUT;
-}
+static int parseDigitalMode(float mode) { return mode < 0.5 ? INPUT : OUTPUT; }
 
 void DigitalIO_next_universal(DigitalIO* unit, int inNumSamples) {
-    World* world = unit->mWorld;
-    BelaContext* context = world->mBelaContext;
+    auto* context = unit->mWorld->mBelaContext;
     const bool ugenAudioRate = (calc_FullRate == unit->mCalcRate);
     const bool pinAudioRate = (calc_FullRate == INRATE(0));
     const bool inputAudioRate = (calc_FullRate == INRATE(1));
