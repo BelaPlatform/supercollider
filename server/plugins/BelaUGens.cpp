@@ -156,7 +156,7 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
         analogPin = (int)fin[n];
         muxChannel = (int)fmux[n];
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
-            || (muxChannel > context->multiplexerChannels)) {
+            || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
                        context->analogInChannels, analogPin);
             rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
@@ -183,7 +183,7 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
     for (unsigned int n = 0; n < inNumSamples; n++) {
         analogPin = (int)fin[n];
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
-            || (muxChannel > context->multiplexerChannels)) {
+            || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
                        context->analogInChannels, analogPin);
             rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
@@ -210,7 +210,7 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
     for (unsigned int n = 0; n < inNumSamples; n++) {
         muxChannel = (int)fmux[n];
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
-            || (muxChannel > context->multiplexerChannels)) {
+            || (muxChannel >= context->multiplexerChannels)) {
             rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
                        context->analogInChannels, analogPin);
             rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
@@ -233,7 +233,7 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
     float analogValue = 0;
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
-        || (muxChannel > context->multiplexerChannels)) {
+        || (muxChannel >= context->multiplexerChannels)) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
                    context->analogInChannels, analogPin);
         rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
@@ -261,7 +261,7 @@ void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i \n", 0,
                    context->analogInChannels, analogPin);
         ZOUT0(0) = 0.0;
-    } else if ((muxChannel < 0) || (muxChannel > context->multiplexerChannels)) {
+    } else if ((muxChannel < 0) || (muxChannel >= context->multiplexerChannels)) {
         rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i \n", 0,
                    context->multiplexerChannels, muxChannel);
         ZOUT0(0) = 0.0;
