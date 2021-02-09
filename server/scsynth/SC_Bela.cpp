@@ -22,14 +22,14 @@
     copyright their authors, and published under the same licence.
 */
 #include "SC_CoreAudio.h"
-#include <stdarg.h>
 #include "SC_Prototypes.h"
 #include "SC_HiddenWorld.h"
 #include "SC_WorldOptions.h"
 #include "SC_Time.hpp"
 #include "SC_BelaScope.h"
-#include <math.h>
-#include <stdlib.h>
+#include <cmath> // floor
+#include <cstdlib> // exit
+#include <cstring> // memcpy
 #include <cobalt/time.h> // needed for CLOCK_HOST_REALTIME
 #include <cobalt/stdio.h> // rt_vprintf
 
