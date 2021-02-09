@@ -130,6 +130,21 @@ struct HiddenWorld {
     const char* mInputStreamsEnabled;
     const char* mOutputStreamsEnabled;
 #endif
+
+#ifdef SC_BELA
+    uint32 mBelaAnalogInputChannels;
+    uint32 mBelaAnalogOutputChannels;
+    uint32 mBelaDigitalChannels;
+    float mBelaHeadphoneLevel;
+    float mBelaPGAGainLeft;
+    float mBelaPGAGainRight;
+    bool mBelaSpeakerMuted;
+    float mBelaDACLevel;
+    float mBelaADCLevel;
+    uint32 mBelaNumMuxChannels;
+    uint32 mBelaPRU;
+#endif
+
     const char* mInDeviceName;
     const char* mOutDeviceName;
     class server_shared_memory_creator* mShmem;
