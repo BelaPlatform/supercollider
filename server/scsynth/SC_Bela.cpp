@@ -81,7 +81,7 @@ protected:
     bool DriverStop() override;
 
 private:
-    int mInputChannelCount, mOutputChannelCount;
+    int mInputChannelCount = 0, mOutputChannelCount = 0;
     uint32 mSCBufLength;
     float mBelaSampleRate = 0;
 };
