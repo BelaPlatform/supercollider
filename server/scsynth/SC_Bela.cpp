@@ -120,9 +120,8 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
     struct timespec tspec;
 
     sc_SetDenormalFlags();
-    World* world = mWorld;
     // add a pointer to belaWorld
-    world->mBelaContext = belaContext;
+    mWorld->mBelaContext = belaContext;
 
     // NOTE: code here is adapted from the SC_Jack.cpp, the version not using the DLL
 
@@ -226,21 +225,21 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             while ((schedTime = mScheduler.NextTime()) <= nextTime) {
                 float diffTime = (float)(schedTime - oscTime) * oscToSamples + 0.5;
                 float diffTimeFloor = floor(diffTime);
-                world->mSampleOffset = (int)diffTimeFloor;
-                world->mSubsampleOffset = diffTime - diffTimeFloor;
+                mWorld->mSampleOffset = (int)diffTimeFloor;
+                mWorld->mSubsampleOffset = diffTime - diffTimeFloor;
 
-                if (world->mSampleOffset < 0)
-                    world->mSampleOffset = 0;
-                else if (world->mSampleOffset >= world->mBufLength)
-                    world->mSampleOffset = world->mBufLength - 1;
+                if (mWorld->mSampleOffset < 0)
+                    mWorld->mSampleOffset = 0;
+                else if (mWorld->mSampleOffset >= mWorld->mBufLength)
+                    mWorld->mSampleOffset = mWorld->mBufLength - 1;
 
                 SC_ScheduledEvent event = mScheduler.Remove();
                 event.Perform();
             }
 
-            world->mSampleOffset = 0;
-            world->mSubsampleOffset = 0.f;
-            World_Run(world);
+            mWorld->mSampleOffset = 0;
+            mWorld->mSubsampleOffset = 0.f;
+            World_Run(mWorld);
 
             // copy touched outputs
             tch = outTouched;
