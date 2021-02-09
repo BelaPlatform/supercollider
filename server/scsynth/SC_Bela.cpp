@@ -355,7 +355,8 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
         // Chosing the maximum of the two
         numAnalogOut = sc_max(numAnalogOut, numAnalogIn);
         numAnalogIn = numAnalogOut;
-        printf("Number of analog input channels must match number of analog outputs. Using %u for both\n", numAnalogIn);
+        scprintf("Number of analog input channels must match number of analog outputs. Using %u for both\n",
+                 numAnalogIn);
     }
     settings->numAnalogInChannels = numAnalogIn;
     settings->numAnalogOutChannels = numAnalogOut;
@@ -367,13 +368,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // enable the audio expander capelet for the first few "analog as audio" channels
     // inputs and ...
     for (int n = 0; n < extraAudioIn; ++n) {
-        printf("Using analog in %d as audio in %d\n", n, n + cfg->audioInChannels);
+        scprintf("Using analog in %d as audio in %d\n", n, n + cfg->audioInChannels);
         settings->audioExpanderInputs |= (1 << n);
     }
 
     // ... outputs
     for (int n = 0; n < extraAudioOut; ++n) {
-        printf("Using analog out %d as audio out %d\n", n, n + cfg->audioOutChannels);
+        scprintf("Using analog out %d as audio out %d\n", n, n + cfg->audioOutChannels);
         settings->audioExpanderOutputs |= (1 << n);
     }
 
