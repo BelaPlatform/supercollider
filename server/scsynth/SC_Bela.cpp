@@ -59,14 +59,14 @@ int64 oscTimeNow() { return GetCurrentOSCTime(); }
 void initializeScheduler() { gOSCoffset = GetCurrentOSCTime(); }
 
 
-class SC_BelaDriver : public SC_AudioDriver {
+class SC_BelaDriver final : public SC_AudioDriver {
     int mInputChannelCount, mOutputChannelCount;
 
 protected:
     // Driver interface methods
-    virtual bool DriverSetup(int* outNumSamplesPerCallback, double* outSampleRate);
-    virtual bool DriverStart();
-    virtual bool DriverStop();
+    bool DriverSetup(int* outNumSamplesPerCallback, double* outSampleRate) override;
+    bool DriverStart() override;
+    bool DriverStop() override;
 
 public:
     SC_BelaDriver(struct World* inWorld);
