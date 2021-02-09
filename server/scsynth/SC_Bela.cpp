@@ -162,8 +162,6 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
 
         float* inBuses = mWorld->mAudioBus + mWorld->mNumOutputs * bufFrames;
         float* outBuses = mWorld->mAudioBus;
-        int32* inTouched = mWorld->mAudioBusTouched + mWorld->mNumOutputs;
-        int32* outTouched = mWorld->mAudioBusTouched;
 
         int minInputs = sc_min(numInputs, mWorld->mNumInputs);
         int minOutputs = sc_min(numOutputs, mWorld->mNumOutputs);
@@ -188,11 +186,8 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
         //}
 
         // main loop
-        int64 oscTime = mOSCbuftime =
-            (static_cast<int64>(tspec.tv_sec + kSECONDS_FROM_1900_to_1970) << 32) + static_cast<int64>(tspec.tv_nsec * kNanosToOSCunits);
-
-        int64 oscInc = mOSCincrement;
-        double oscToSamples = mOSCtoSamples;
+        mOSCbuftime = (static_cast<int64>(tspec.tv_sec + kSECONDS_FROM_1900_to_1970) << 32)
+            + static_cast<int64>(tspec.tv_nsec * kNanosToOSCunits);
 
         // clear out anything left over in audioOut buffer
         for (int i = 0; i < belaContext->audioFrames * belaContext->audioOutChannels; i++) {
@@ -200,28 +195,25 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
         }
 
         for (int i = 0; i < numBufs; ++i, mWorld->mBufCounter++) {
-            int32 bufCounter = mWorld->mBufCounter;
-            int32* tch;
-
             // copy+touch inputs
-            tch = inTouched;
+            int32* tch = mWorld->mAudioBusTouched + mWorld->mNumOutputs;
             memcpy(inBuses, belaContext->audioIn, sizeof(belaContext->audioIn[0]) * bufFrames * minInputs);
             for (int k = 0; k < minInputs; ++k) {
-                *tch++ = bufCounter;
+                *tch++ = mWorld->mBufCounter;
             }
 
             memcpy(inBuses + minInputs * bufFrames, belaContext->analogIn,
                    sizeof(belaContext->analogIn[0]) * bufFrames * anaInputs);
             for (int k = minInputs; k < (minInputs + anaInputs); ++k) {
-                *tch++ = bufCounter;
+                *tch++ = mWorld->mBufCounter;
             }
 
             // run engine
             int64 schedTime;
-            int64 nextTime = oscTime + oscInc;
+            int64 nextTime = mOSCbuftime + mOSCincrement;
 
             while ((schedTime = mScheduler.NextTime()) <= nextTime) {
-                float diffTime = static_cast<float>(schedTime - oscTime) * oscToSamples + 0.5;
+                float diffTime = static_cast<float>(schedTime - mOSCbuftime) * mOSCtoSamples + 0.5;
                 float diffTimeFloor = floor(diffTime);
                 mWorld->mSampleOffset = static_cast<int>(diffTimeFloor);
                 mWorld->mSubsampleOffset = diffTime - diffTimeFloor;
@@ -240,17 +232,17 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             World_Run(mWorld);
 
             // copy touched outputs
-            tch = outTouched;
+            tch = mWorld->mAudioBusTouched;
 
             for (int k = 0; k < minOutputs; ++k) {
-                if (*tch++ == bufCounter) {
+                if (*tch++ == mWorld->mBufCounter) {
                     memcpy(belaContext->audioOut + k * bufFrames, outBuses + k * bufFrames,
                            sizeof(belaContext->audioOut[0]) * bufFrames);
                 }
             }
 
             for (int k = minOutputs; k < (minOutputs + anaOutputs); ++k) {
-                if (*tch++ == bufCounter) {
+                if (*tch++ == mWorld->mBufCounter) {
                     unsigned int analogChannel = k - minOutputs; // starting at 0
                     memcpy(belaContext->analogOut + analogChannel * bufFrames, outBuses + k * bufFrames,
                            sizeof(belaContext->analogOut[0]) * bufFrames);
@@ -258,7 +250,7 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             }
 
             // advance OSC time
-            mOSCbuftime = oscTime = nextTime;
+            mOSCbuftime = nextTime;
         }
 
         if (mWorld->mBelaScope)
