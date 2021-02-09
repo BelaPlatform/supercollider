@@ -83,6 +83,7 @@ protected:
 private:
     int mInputChannelCount, mOutputChannelCount;
     uint32 mSCBufLength;
+    float mBelaSampleRate = 0;
 };
 
 SC_BelaDriver* SC_BelaDriver::s_instance = nullptr;
@@ -102,13 +103,11 @@ SC_BelaDriver::~SC_BelaDriver() {
     mWorld->mBelaScope = nullptr;
 }
 
-static float gBelaSampleRate;
-
 // Return true on success; returning false halts the program.
 bool SC_BelaDriver::BelaSetup(BelaContext* belaContext) {
-    gBelaSampleRate = belaContext->audioSampleRate;
+    mBelaSampleRate = belaContext->audioSampleRate;
     if (mWorld->mBelaMaxScopeChannels > 0)
-        mWorld->mBelaScope = new BelaScope(mWorld->mBelaMaxScopeChannels, gBelaSampleRate, belaContext->audioFrames);
+        mWorld->mBelaScope = new BelaScope(mWorld->mBelaMaxScopeChannels, mBelaSampleRate, belaContext->audioFrames);
     return true;
 }
 
@@ -457,7 +456,7 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     }
 
     *outNumSamples = settings->periodSize;
-    *outSampleRate = gBelaSampleRate;
+    *outSampleRate = mBelaSampleRate;
     Bela_InitSettings_free(settings);
     Bela_HwConfig_delete(cfg);
 
