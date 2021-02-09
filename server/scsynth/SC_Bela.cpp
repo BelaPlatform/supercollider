@@ -128,7 +128,7 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
     // Use Xenomai-friendly clock_gettime()
     __wrap_clock_gettime(CLOCK_HOST_REALTIME, &tspec);
 
-    double hostSecs = (double)tspec.tv_sec + (double)tspec.tv_nsec * 1.0e-9;
+    double hostSecs = static_cast<double>(tspec.tv_sec) + static_cast<double>(tspec.tv_nsec) * 1.0e-9;
     double sampleTime = static_cast<double>(belaContext->audioFramesElapsed);
 
     if (mStartHostSecs == 0) {
@@ -141,7 +141,7 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
         if (fabs(smoothSampleRate - mSampleRate) > 10.) {
             smoothSampleRate = mSampleRate;
         }
-        mOSCincrement = (int64)(mOSCincrementNumerator / smoothSampleRate);
+        mOSCincrement = static_cast<int64>(mOSCincrementNumerator / smoothSampleRate);
         mSmoothSampleRate = smoothSampleRate;
     }
 
@@ -169,12 +169,12 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
         int minOutputs = sc_min(numOutputs, mWorld->mNumOutputs);
 
         int anaInputs = 0;
-        if (numInputs < (int)mWorld->mNumInputs) {
-            anaInputs = sc_min(belaContext->analogInChannels, (int)(mWorld->mNumInputs - numInputs));
+        if (numInputs < mWorld->mNumInputs) {
+            anaInputs = sc_min(belaContext->analogInChannels, static_cast<int>(mWorld->mNumInputs - numInputs));
         }
         int anaOutputs = 0;
-        if (numOutputs < (int)mWorld->mNumOutputs) {
-            anaOutputs = sc_min(belaContext->analogOutChannels, (int)(mWorld->mNumOutputs - numOutputs));
+        if (numOutputs < mWorld->mNumOutputs) {
+            anaOutputs = sc_min(belaContext->analogOutChannels, static_cast<int>(mWorld->mNumOutputs - numOutputs));
         }
 
         int bufFramePos = 0;
@@ -191,7 +191,7 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
 
         // main loop
         int64 oscTime = mOSCbuftime =
-            ((int64)(tspec.tv_sec + kSECONDS_FROM_1900_to_1970) << 32) + (int64)(tspec.tv_nsec * kNanosToOSCunits);
+            (static_cast<int64>(tspec.tv_sec + kSECONDS_FROM_1900_to_1970) << 32) + static_cast<int64>(tspec.tv_nsec * kNanosToOSCunits);
 
         int64 oscInc = mOSCincrement;
         double oscToSamples = mOSCtoSamples;
@@ -223,9 +223,9 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             int64 nextTime = oscTime + oscInc;
 
             while ((schedTime = mScheduler.NextTime()) <= nextTime) {
-                float diffTime = (float)(schedTime - oscTime) * oscToSamples + 0.5;
+                float diffTime = static_cast<float>(schedTime - oscTime) * oscToSamples + 0.5;
                 float diffTimeFloor = floor(diffTime);
-                mWorld->mSampleOffset = (int)diffTimeFloor;
+                mWorld->mSampleOffset = static_cast<int>(diffTimeFloor);
                 mWorld->mSubsampleOffset = diffTime - diffTimeFloor;
 
                 if (mWorld->mSampleOffset < 0)
