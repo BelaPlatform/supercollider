@@ -60,7 +60,7 @@ public:
     virtual ~SC_BelaDriver();
 
     void BelaAudioCallback(BelaContext* belaContext);
-    bool BelaSetup(BelaContext* belaContext);
+    bool BelaSetup(const BelaContext* belaContext);
     void SignalReceived(int signal);
 
     static SC_BelaDriver* s_instance;
@@ -104,7 +104,7 @@ SC_BelaDriver::~SC_BelaDriver() {
 }
 
 // Return true on success; returning false halts the program.
-bool SC_BelaDriver::BelaSetup(BelaContext* belaContext) {
+bool SC_BelaDriver::BelaSetup(const BelaContext* belaContext) {
     mBelaSampleRate = belaContext->audioSampleRate;
     if (mWorld->mBelaMaxScopeChannels > 0)
         mWorld->mBelaScope = new BelaScope(mWorld->mBelaMaxScopeChannels, mBelaSampleRate, belaContext->audioFrames);
