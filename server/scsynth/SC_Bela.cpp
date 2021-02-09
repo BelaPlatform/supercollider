@@ -197,13 +197,13 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
         for (int i = 0; i < numBufs; ++i, mWorld->mBufCounter++) {
             // copy+touch inputs
             int32* tch = mWorld->mAudioBusTouched + mWorld->mNumOutputs;
-            memcpy(inBuses, belaContext->audioIn, sizeof(belaContext->audioIn[0]) * bufFrames * minInputs);
+            std::memcpy(inBuses, belaContext->audioIn, sizeof(belaContext->audioIn[0]) * bufFrames * minInputs);
             for (int k = 0; k < minInputs; ++k) {
                 *tch++ = mWorld->mBufCounter;
             }
 
-            memcpy(inBuses + minInputs * bufFrames, belaContext->analogIn,
-                   sizeof(belaContext->analogIn[0]) * bufFrames * anaInputs);
+            std::memcpy(inBuses + minInputs * bufFrames, belaContext->analogIn,
+                        sizeof(belaContext->analogIn[0]) * bufFrames * anaInputs);
             for (int k = minInputs; k < (minInputs + anaInputs); ++k) {
                 *tch++ = mWorld->mBufCounter;
             }
@@ -214,7 +214,7 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
 
             while ((schedTime = mScheduler.NextTime()) <= nextTime) {
                 float diffTime = static_cast<float>(schedTime - mOSCbuftime) * mOSCtoSamples + 0.5;
-                float diffTimeFloor = floor(diffTime);
+                float diffTimeFloor = std::floor(diffTime);
                 mWorld->mSampleOffset = static_cast<int>(diffTimeFloor);
                 mWorld->mSubsampleOffset = diffTime - diffTimeFloor;
 
@@ -236,16 +236,16 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
 
             for (int k = 0; k < minOutputs; ++k) {
                 if (*tch++ == mWorld->mBufCounter) {
-                    memcpy(belaContext->audioOut + k * bufFrames, outBuses + k * bufFrames,
-                           sizeof(belaContext->audioOut[0]) * bufFrames);
+                    std::memcpy(belaContext->audioOut + k * bufFrames, outBuses + k * bufFrames,
+                                sizeof(belaContext->audioOut[0]) * bufFrames);
                 }
             }
 
             for (int k = minOutputs; k < (minOutputs + anaOutputs); ++k) {
                 if (*tch++ == mWorld->mBufCounter) {
                     unsigned int analogChannel = k - minOutputs; // starting at 0
-                    memcpy(belaContext->analogOut + analogChannel * bufFrames, outBuses + k * bufFrames,
-                           sizeof(belaContext->analogOut[0]) * bufFrames);
+                    std::memcpy(belaContext->analogOut + analogChannel * bufFrames, outBuses + k * bufFrames,
+                                sizeof(belaContext->analogOut[0]) * bufFrames);
                 }
             }
 
