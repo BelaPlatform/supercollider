@@ -48,16 +48,11 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec* tp);
 
 using namespace std;
 
+// Audio driver API implementation
 int32 server_timeseed() { return timeSeed(); }
-
 int64 gOSCoffset = 0;
-
-static inline int64 GetCurrentOSCTime() { return OSCTime(getTime()); }
-
-int64 oscTimeNow() { return GetCurrentOSCTime(); }
-
-void initializeScheduler() { gOSCoffset = GetCurrentOSCTime(); }
-
+int64 oscTimeNow() { return OSCTime(getTime()); }
+void initializeScheduler() { gOSCoffset = oscTimeNow(); }
 
 class SC_BelaDriver final : public SC_AudioDriver {
     int mInputChannelCount, mOutputChannelCount;
