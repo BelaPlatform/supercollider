@@ -98,8 +98,8 @@ SC_BelaDriver::~SC_BelaDriver() {
     Bela_cleanupAudio();
     scprintf("SC_BelaDriver: >>Bela_cleanupAudio\n");
     s_instance = nullptr;
-    if (mWorld->mBelaScope)
-        delete mWorld->mBelaScope;
+    delete mWorld->mBelaScope;
+    mWorld->mBelaScope = nullptr;
 }
 
 static float gBelaSampleRate;
