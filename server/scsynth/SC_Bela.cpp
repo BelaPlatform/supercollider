@@ -64,15 +64,7 @@ public:
     void SignalReceived(int signal);
 
     static SC_BelaDriver* s_instance;
-    static SC_BelaDriver* Construct() {
-        if (s_instance != nullptr) {
-            scprintf("*** ERROR: Asked to construct a second instance of SC_BelaDriver.\n");
-            std::exit(1);
-        }
-
-        s_instance = new SC_BelaDriver(inWorld);
-        return s_instance;
-    }
+    static SC_BelaDriver* Construct();
 
 protected:
     // Driver interface methods
@@ -89,6 +81,16 @@ private:
 SC_BelaDriver* SC_BelaDriver::s_instance = nullptr;
 
 SC_AudioDriver* SC_NewAudioDriver(struct World* inWorld) { return SC_BelaDriver::Construct(); }
+
+SC_BelaDriver* SC_BelaDriver::Construct() {
+    if (s_instance != nullptr) {
+        scprintf("*** ERROR: Asked to construct a second instance of SC_BelaDriver.\n");
+        std::exit(1);
+    }
+
+    s_instance = new SC_BelaDriver(inWorld);
+    return s_instance;
+}
 
 SC_BelaDriver::SC_BelaDriver(World* inWorld): SC_AudioDriver(inWorld), mSCBufLength(inWorld->mBufLength) {
     mStartHostSecs = 0;
