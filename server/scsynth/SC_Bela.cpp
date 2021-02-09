@@ -304,8 +304,8 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     settings->useAnalog = 0;
 
     // explicitly requested number of analog channels
-    int numAnalogIn = mWorld->mBelaAnalogInputChannels;
-    int numAnalogOut = mWorld->mBelaAnalogOutputChannels;
+    int numAnalogIn = mWorld->hw->mBelaAnalogInputChannels;
+    int numAnalogOut = mWorld->hw->mBelaAnalogOutputChannels;
 
     // Here is the deal. We need to know:
     // - how many real audio channels are available
@@ -379,37 +379,37 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // configure the number of digital channels
     settings->useDigital = 0;
 
-    if (mWorld->mBelaDigitalChannels > 0) {
-        settings->numDigitalChannels = mWorld->mBelaDigitalChannels;
+    if (mWorld->hw->mBelaDigitalChannels > 0) {
+        settings->numDigitalChannels = mWorld->hw->mBelaDigitalChannels;
         settings->useDigital = 1;
     }
-    if ((mWorld->mBelaHeadphoneLevel >= -63.5)
-        && (mWorld->mBelaHeadphoneLevel <= 0.)) { // headphone output level (0dB max; -63.5dB min)
-        settings->headphoneLevel = mWorld->mBelaHeadphoneLevel;
+    if ((mWorld->hw->mBelaHeadphoneLevel >= -63.5)
+        && (mWorld->hw->mBelaHeadphoneLevel <= 0.)) { // headphone output level (0dB max; -63.5dB min)
+        settings->headphoneLevel = mWorld->hw->mBelaHeadphoneLevel;
     }
-    if ((mWorld->mBelaPGAGainLeft >= 0) && (mWorld->mBelaPGAGainLeft <= 59.5)) { // (0db min; 59.5db max)
-        settings->pgaGain[0] = mWorld->mBelaPGAGainLeft;
+    if ((mWorld->hw->mBelaPGAGainLeft >= 0) && (mWorld->hw->mBelaPGAGainLeft <= 59.5)) { // (0db min; 59.5db max)
+        settings->pgaGain[0] = mWorld->hw->mBelaPGAGainLeft;
     }
-    if ((mWorld->mBelaPGAGainRight >= 0) && (mWorld->mBelaPGAGainRight <= 59.5)) { // (0db min; 59.5db max)
-        settings->pgaGain[1] = mWorld->mBelaPGAGainRight;
+    if ((mWorld->hw->mBelaPGAGainRight >= 0) && (mWorld->hw->mBelaPGAGainRight <= 59.5)) { // (0db min; 59.5db max)
+        settings->pgaGain[1] = mWorld->hw->mBelaPGAGainRight;
     }
 
-    if (mWorld->mBelaSpeakerMuted) {
+    if (mWorld->hw->mBelaSpeakerMuted) {
         settings->beginMuted = 1;
     } else {
         settings->beginMuted = 0;
     }
-    if ((mWorld->mBelaDACLevel >= -63.5) && (mWorld->mBelaDACLevel <= 0.)) { // (0dB max; -63.5dB min)
-        settings->dacLevel = mWorld->mBelaDACLevel;
+    if ((mWorld->hw->mBelaDACLevel >= -63.5) && (mWorld->hw->mBelaDACLevel <= 0.)) { // (0dB max; -63.5dB min)
+        settings->dacLevel = mWorld->hw->mBelaDACLevel;
     }
-    if ((mWorld->mBelaADCLevel >= -12) && (mWorld->mBelaADCLevel <= 0.)) { // (0dB max; -12dB min)
-        settings->adcLevel = mWorld->mBelaADCLevel;
+    if ((mWorld->hw->mBelaADCLevel >= -12) && (mWorld->hw->mBelaADCLevel <= 0.)) { // (0dB max; -12dB min)
+        settings->adcLevel = mWorld->hw->mBelaADCLevel;
     }
 
-    settings->numMuxChannels = mWorld->mBelaNumMuxChannels;
+    settings->numMuxChannels = mWorld->hw->mBelaNumMuxChannels;
 
-    if ((mWorld->mBelaPRU == 0) || (mWorld->mBelaPRU == 1)) {
-        settings->pruNumber = mWorld->mBelaPRU;
+    if ((mWorld->hw->mBelaPRU == 0) || (mWorld->hw->mBelaPRU == 1)) {
+        settings->pruNumber = mWorld->hw->mBelaPRU;
     }
 
     scprintf("SC_BelaDriver: >>DriverSetup - Running on PRU (%i)\nConfigured with \n (%i) analog input and (%i) analog "

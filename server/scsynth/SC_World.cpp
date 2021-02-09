@@ -410,18 +410,18 @@ World* World_New(WorldOptions* inOptions) {
             world->hw->mPassword[0] = 0;
         }
 #ifdef SC_BELA
-        world->mBelaAnalogInputChannels = inOptions->mBelaAnalogInputChannels;
-        world->mBelaAnalogOutputChannels = inOptions->mBelaAnalogOutputChannels;
-        world->mBelaDigitalChannels = inOptions->mBelaDigitalChannels;
-        world->mBelaHeadphoneLevel = inOptions->mBelaHeadphoneLevel;
-        world->mBelaPGAGainLeft = inOptions->mBelaPGAGainLeft;
-        world->mBelaPGAGainRight = inOptions->mBelaPGAGainRight;
-        world->mBelaSpeakerMuted = inOptions->mBelaSpeakerMuted;
-        world->mBelaDACLevel = inOptions->mBelaDACLevel;
-        world->mBelaADCLevel = inOptions->mBelaADCLevel;
-        world->mBelaNumMuxChannels = inOptions->mBelaNumMuxChannels;
-        world->mBelaPRU = inOptions->mBelaPRU;
-        world->mBelaMaxScopeChannels = inOptions->mBelaMaxScopeChannels;
+        world->hw->mBelaAnalogInputChannels = inOptions->mBelaAnalogInputChannels;
+        world->hw->mBelaAnalogOutputChannels = inOptions->mBelaAnalogOutputChannels;
+        world->hw->mBelaDigitalChannels = inOptions->mBelaDigitalChannels;
+        world->hw->mBelaHeadphoneLevel = inOptions->mBelaHeadphoneLevel;
+        world->hw->mBelaPGAGainLeft = inOptions->mBelaPGAGainLeft;
+        world->hw->mBelaPGAGainRight = inOptions->mBelaPGAGainRight;
+        world->hw->mBelaSpeakerMuted = inOptions->mBelaSpeakerMuted;
+        world->hw->mBelaDACLevel = inOptions->mBelaDACLevel;
+        world->hw->mBelaADCLevel = inOptions->mBelaADCLevel;
+        world->hw->mBelaNumMuxChannels = inOptions->mBelaNumMuxChannels;
+        world->hw->mBelaPRU = inOptions->mBelaPRU;
+        world->hw->mBelaMaxScopeChannels = inOptions->mBelaMaxScopeChannels;
 #endif // SC_BELA
 
 #ifdef __APPLE__

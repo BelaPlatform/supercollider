@@ -113,17 +113,6 @@ struct World {
     BelaContext* mBelaContext;
     BelaScope* mBelaScope;
     uint32 mBelaMaxScopeChannels;
-    uint32 mBelaAnalogInputChannels;
-    uint32 mBelaAnalogOutputChannels;
-    uint32 mBelaDigitalChannels;
-    float mBelaHeadphoneLevel;
-    float mBelaPGAGainLeft;
-    float mBelaPGAGainRight;
-    bool mBelaSpeakerMuted;
-    float mBelaDACLevel;
-    float mBelaADCLevel;
-    uint32 mBelaNumMuxChannels;
-    uint32 mBelaPRU;
 #endif // SC_BELA
 };
 
