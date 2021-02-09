@@ -113,29 +113,7 @@ bool SC_BelaDriver::BelaSetup(const BelaContext* belaContext) {
     return true;
 }
 
-bool sc_belaSetup(BelaContext* belaContext, void* userData) {
-    // cast void pointer
-    SC_BelaDriver* belaDriver = (SC_BelaDriver*)userData;
-    return belaDriver->BelaSetup(belaContext);
-}
-
-void sc_belaRender(BelaContext* belaContext, void* userData) {
-    SC_BelaDriver* driver = (SC_BelaDriver*)userData;
-
-    driver->BelaAudioCallback(belaContext);
-}
-
-void sc_belaAudioThreadDone(BelaContext*, void* userData) {
-    SC_BelaDriver* driver = (SC_BelaDriver*)userData;
-    if (driver)
-        driver->SignalReceived(0);
-}
-
-void sc_belaSignal(int arg) {
-    if (SC_BelaDriver::s_instance != nullptr)
-        SC_BelaDriver::s_instance->SignalReceived(arg);
-}
-
+// Defined in SC_World.cpp
 void sc_SetDenormalFlags();
 
 void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
@@ -303,12 +281,22 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
 bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     BelaInitSettings* settings = Bela_InitSettings_alloc();
     Bela_defaultSettings(settings);
-    settings->setup = sc_belaSetup;
-    settings->render = sc_belaRender;
+
+    settings->setup = [](BelaContext* belaContext, void* userData) {
+        return static_cast<SC_BelaDriver*>(userData)->BelaSetup(belaContext);
+    };
+    settings->render = [](BelaContext* belaContext, void* userData) {
+        static_cast<SC_BelaDriver*>(userData)->BelaAudioCallback(belaContext);
+    };
     // if the feature is supported on Bela, add a callback to be called when
     // the audio thread stops. This is useful e.g.: to gracefully exit from
     // scsynth when pressing the Bela button
-    settings->audioThreadDone = sc_belaAudioThreadDone;
+    settings->audioThreadDone = [](BelaContext*, void* userData) {
+        auto* driver = static_cast<SC_BelaDriver*>(userData);
+        if (driver)
+            driver->SignalReceived(0);
+    };
+
     settings->interleave = 0;
     settings->uniformSampleRate = 1;
     settings->analogOutputsPersist = 0;
@@ -463,8 +451,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     Bela_HwConfig_delete(cfg);
 
     // Set up interrupt handler to catch Control-C and SIGTERM
-    signal(SIGINT, sc_belaSignal);
-    signal(SIGTERM, sc_belaSignal);
+
+    auto signalFunc = [](int signal) {
+        if (SC_BelaDriver::s_instance != nullptr)
+            SC_BelaDriver::s_instance->SignalReceived(signal);
+    };
+    signal(SIGINT, signalFunc);
+    signal(SIGTERM, signalFunc);
 
     return true;
 }
