@@ -55,7 +55,14 @@ int64 oscTimeNow() { return OSCTime(getTime()); }
 void initializeScheduler() { gOSCoffset = oscTimeNow(); }
 
 class SC_BelaDriver final : public SC_AudioDriver {
-    int mInputChannelCount, mOutputChannelCount;
+public:
+    SC_BelaDriver(World* inWorld);
+    virtual ~SC_BelaDriver();
+
+    void BelaAudioCallback(BelaContext* belaContext);
+    bool BelaSetup(BelaContext* belaContext);
+    void SignalReceived(int signal);
+    static int countInstances;
 
 protected:
     // Driver interface methods
@@ -63,16 +70,8 @@ protected:
     bool DriverStart() override;
     bool DriverStop() override;
 
-public:
-    SC_BelaDriver(struct World* inWorld);
-    virtual ~SC_BelaDriver();
-
-    void BelaAudioCallback(BelaContext* belaContext);
-    bool BelaSetup(BelaContext* belaContext);
-    void SignalReceived(int);
-    static int countInstances;
-
 private:
+    int mInputChannelCount, mOutputChannelCount;
     uint32 mSCBufLength;
 };
 
@@ -88,7 +87,7 @@ SC_AudioDriver* SC_NewAudioDriver(struct World* inWorld) {
     return mBelaDriverInstance;
 }
 
-SC_BelaDriver::SC_BelaDriver(struct World* inWorld): SC_AudioDriver(inWorld) {
+SC_BelaDriver::SC_BelaDriver(World* inWorld): SC_AudioDriver(inWorld) {
     mStartHostSecs = 0;
     mSCBufLength = inWorld->mBufLength;
 
