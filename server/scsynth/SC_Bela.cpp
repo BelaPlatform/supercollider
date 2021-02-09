@@ -62,7 +62,17 @@ public:
     void BelaAudioCallback(BelaContext* belaContext);
     bool BelaSetup(BelaContext* belaContext);
     void SignalReceived(int signal);
-    static int countInstances;
+
+    static SC_BelaDriver* s_instance;
+    static SC_BelaDriver* Construct() {
+        if (s_instance != nullptr) {
+            scprintf("*** ERROR: Asked to construct a second instance of SC_BelaDriver.\n");
+            std::exit(1);
+        }
+
+        s_instance = new SC_BelaDriver(inWorld);
+        return s_instance;
+    }
 
 protected:
     // Driver interface methods
@@ -75,36 +85,20 @@ private:
     uint32 mSCBufLength;
 };
 
-int SC_BelaDriver::countInstances;
-SC_BelaDriver* mBelaDriverInstance = 0;
+SC_BelaDriver* SC_BelaDriver::s_instance = nullptr;
 
-SC_AudioDriver* SC_NewAudioDriver(struct World* inWorld) {
-    if (mBelaDriverInstance != 0) {
-        scprintf("Warning: SC_NewAudioDriver called with an existing SC_BelaDriver instance.\n");
-    }
-
-    mBelaDriverInstance = new SC_BelaDriver(inWorld);
-    return mBelaDriverInstance;
-}
+SC_AudioDriver* SC_NewAudioDriver(struct World* inWorld) { return SC_BelaDriver::Construct(); }
 
 SC_BelaDriver::SC_BelaDriver(World* inWorld): SC_AudioDriver(inWorld) {
     mStartHostSecs = 0;
     mSCBufLength = inWorld->mBufLength;
-
-    ++countInstances;
-    if (countInstances != 1) {
-        fprintf(stderr, "Error: there are %d instances of SC_BelaDriver running at the same time. Exiting\n",
-                countInstances);
-        exit(1);
-    }
 }
 
 SC_BelaDriver::~SC_BelaDriver() {
     // Clean up any resources allocated for audio
     Bela_cleanupAudio();
     scprintf("SC_BelaDriver: >>Bela_cleanupAudio\n");
-    --countInstances;
-    mBelaDriverInstance = 0;
+    s_instance = nullptr;
     if (mWorld->mBelaScope)
         delete mWorld->mBelaScope;
 }
@@ -138,8 +132,8 @@ void sc_belaAudioThreadDone(BelaContext*, void* userData) {
 }
 
 void sc_belaSignal(int arg) {
-    if (mBelaDriverInstance != 0)
-        mBelaDriverInstance->SignalReceived(arg);
+    if (SC_BelaDriver::s_instance != nullptr)
+        SC_BelaDriver::s_instance->SignalReceived(arg);
 }
 
 void sc_SetDenormalFlags();
