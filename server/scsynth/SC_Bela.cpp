@@ -68,7 +68,7 @@ public:
 
 protected:
     // Driver interface methods
-    bool DriverSetup(int* outNumSamplesPerCallback, double* outSampleRate) override;
+    bool DriverSetup(int* outNumSamples, double* outSampleRate) override;
     bool DriverStart() override;
     bool DriverStop() override;
 
