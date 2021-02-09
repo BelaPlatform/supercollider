@@ -31,12 +31,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <cobalt/time.h> // needed for CLOCK_HOST_REALTIME
+#include <cobalt/stdio.h> // rt_vprintf
 
 extern "C" {
 // This will be wrapped by Xenomai without requiring linker flags
 int __wrap_clock_gettime(clockid_t clock_id, struct timespec* tp);
-// this is provided by Xenomai
-int rt_vprintf(const char* format, va_list ap);
 }
 
 #include "Bela.h"
