@@ -453,7 +453,7 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
 }
 
 bool SC_BelaDriver::DriverStart() {
-    SetPrintFunc((PrintFunc)rt_vprintf); // Use Xenomai's realtime-friendly printing function
+    SetPrintFunc(rt_vprintf); // Use Xenomai's realtime-friendly printing function
     if (Bela_startAudio()) {
         scprintf("Error in SC_BelaDriver::DriverStart(): unable to start real-time audio\n");
         return false;
