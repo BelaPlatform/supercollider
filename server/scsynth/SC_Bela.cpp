@@ -46,8 +46,6 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec* tp);
 #    error You need at least Bela API 1.9
 #endif
 
-using namespace std;
-
 // Audio driver API implementation
 int32 server_timeseed() { return timeSeed(); }
 int64 gOSCoffset = 0;
