@@ -89,9 +89,8 @@ SC_BelaDriver* SC_BelaDriver::s_instance = nullptr;
 
 SC_AudioDriver* SC_NewAudioDriver(World* inWorld) { return SC_BelaDriver::Construct(inWorld); }
 
-SC_BelaDriver::SC_BelaDriver(World* inWorld): SC_AudioDriver(inWorld) {
+SC_BelaDriver::SC_BelaDriver(World* inWorld): SC_AudioDriver(inWorld), mSCBufLength(inWorld->mBufLength) {
     mStartHostSecs = 0;
-    mSCBufLength = inWorld->mBufLength;
 }
 
 SC_BelaDriver::~SC_BelaDriver() {
