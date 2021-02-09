@@ -177,8 +177,6 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             anaOutputs = sc_min(belaContext->analogOutChannels, static_cast<int>(mWorld->mNumOutputs - numOutputs));
         }
 
-        int bufFramePos = 0;
-
         // THIS IS TO DO LATER -- LOOK AT CACHEING AND CONSTING TO IMPROVE EFFICIENCY
         // cache I/O buffers
         // for (int i = 0; i < minInputs; ++i) {
@@ -201,7 +199,7 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             belaContext->audioOut[i] = 0;
         }
 
-        for (int i = 0; i < numBufs; ++i, mWorld->mBufCounter++, bufFramePos += bufFrames) {
+        for (int i = 0; i < numBufs; ++i, mWorld->mBufCounter++) {
             int32 bufCounter = mWorld->mBufCounter;
             int32* tch;
 
