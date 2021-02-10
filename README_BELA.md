@@ -1,107 +1,25 @@
-This code will build on Bela image 3.0 and above (requires libbela and xenomai 3).
+Building SuperCollider for Bela
 ======================================
 
-See [SuperCollider-on-Bela](https://github.com/BelaPlatform/Bela/wiki/SuperCollider-on-Bela) for general information on SuperCollider on Bela.
+This README covers _building_ SuperCollider for Bela.
+By doing so, you will be able to use the Bela audio driver for scsynth, to use Bela's ultra-low-latency audio thread *instead* of jack/portaudio, as well as plugins to access the analog and digital channels of the Bela-cape.
+See [here](https://learn.bela.io/using-bela/languages/supercollider/) for general information about _using_ SuperCollider on Bela.
 
-Compiling SuperCollider scsynth on Bela
-=======================================
+Build requirements
+------------------
 
-See [README.md](README.md) for the main SuperCollider readme.
+SuperCollider on Bela will build on Bela image 0.3.0 and above and it uses Bela's API 1.9 or above.
+While it is possible to build the code on a Bela system ("native"), you are probably better off cross-compiling it from a more powerful machine.
 
-This file is Dan's, Marije's and Giulio's notes about compiling SC on [Bela](http://bela.io) platform.
-
-This branch contains that plus other modifications to get the SC source code master branch building.
-The main addition in this branch is a **Xenomai/Bela audio driver for scsynth**, to use Bela's ultra-low-latency audio thread *instead* of jack/portaudio, and **plugins to access the analog and digital channels of the Bela-cape**
-
-> *NOTE:* This guide assumes you have the [Bela image v0.3.0](https://github.com/BelaPlatform/bela-image-builder/releases/) or later.
-
-> *NOTE:* You need to get the latest version of the Bela code in order for Supercollider to compile.
-
-All of the commands here are to be executed *on the Bela device itself*. Normally you would SSH to it from a computer connected by USB, in order to do the following stuff.
-
-Preparation
-===========
-
-Make sure the system time on the board is up to date. This is ensured by simply opening the Bela IDE in a web browser and loading the page, or from the console, if the board is connected to the internet:
-
-    dpkg-reconfigure tzdata
-    ntpdate pool.ntp.org
-    date  # make sure this gives the right result
-
-or from the console, if the board is NOT connected to the internet, running from the host something like
-
-	ssh -tt -o StrictHostKeyChecking=no -o ConnectTimeout=5 root@192.168.7.2 "sudo date -s \"`date '+%Y%m%d %T %z'`\""
-
-Get the source code
-===================
-
-My modified source code is in this git branch here. If your Bela is connected to the network you can grab it directly:
-
-    cd ~/
-    git clone --recursive -b bela https://github.com/BelaPlatform/supercollider.git
-    cd supercollider
-
-Otherwise, `git clone` it on your computer and `scp` it over.
-
-### On Bela image v0.3.x(Debian Stretch):
-
-Before we compile, here are two optional steps to make your workflow faster
-
-1. installing `ccache` makes repeated builds faster, if you have spare disk space for it. It's especially helpful if you're going to be changing the cmake build scripts.
-
-```
-apt-get install ccache # requires internet access
-mkdir /root/.ccache
-echo "cache_dir = '/extrabela/ccache'" >> ~/.ccache/ccache.conf
-```
-
-2. alternatively, use `distcc` to make all your builds faster by off-loading the actual compilation to your host computer. You need to:
-* install an arm-linux-gnueabihf capabale `gcc-6.3` cross-compiler on your host.
-* then follow instructions here to setup a working distcc environment https://forum.bela.io/d/724-distcc-distributed-compilation-with-bela
-* on the host, launch `distccd` with something like `distccd --verbose --no-detach --daemon --allow 192.168.7.2 --log-level error --log-file ~/distccd.log` (and then `tail ~/distccd.log` for errors)
-* if you get an error during compilation where it cannot find some stdlib includes (e.g.: `#include <chrono>`), it may well be that `cmake` is trying to force `clang` to use `libc++` (with `-stdlib=libc++`). You can override this by editing your distcc-... executable and adding `-stdlib=libstdc++` at the end of the `$@` line.
-* then on the board run the following before the `cmake` commands below:
-
-```
-export DISTCC_HOSTS="192.168.7.1"
-export CC="distcc-clang" # or other as appropriate, see forum post above
-export CXX="distcc-clang++" # or other as appropriate, see forum post above
-```
-
-NOTE: make sure you don't pass `-march=native` to the compiler when using `distcc`, or it will compile natively. Therefore, make sure you do NOT pass `-DNATIVE=ON` to `cmake`, as per below
-
-Then here's how to build:
-
-    mkdir ~/supercollider/build
-    cd ~/supercollider/build
-
-Several options here:
-
-    # here's the command WITHOUT ccache
-    cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DNOVA_SIMD=ON -DSSE=OFF -DSSE2=OFF -DINSTALL_HELP=OFF -DNO_X11=ON -DSC_QT=OFF -DSC_IDE=OFF -DSC_EL=OFF -DSC_ED=OFF -DSC_VIM=OFF -DSC_HIDAPI=OFF -DSUPERNOVA=OFF -DNO_AVAHI=ON -DNATIVE=ON -DENABLE_TESTSUITE=OFF -DAUDIOAPI=bela
-
-    # or here's the command WITH ccache
-    cmake .. -DCMAKE_C_COMPILER=/usr/lib/ccache/clang -DCMAKE_CXX_COMPILER=/usr/lib/ccache/clang-3.9 -DNOVA_SIMD=ON -DSSE=OFF -DSSE2=OFF -DNO_X11=ON -DINSTALL_HELP=OFF -DSC_QT=OFF -DSC_IDE=OFF -DSC_EL=OFF -DSC_ED=OFF -DSC_VIM=OFF -DSC_HIDAPI=OFF -DSUPERNOVA=OFF -DNO_AVAHI=ON -DNATIVE=ON -DENABLE_TESTSUITE=OFF -DAUDIOAPI=bela
-
-	# or here's the command WITH distcc (it will infer the compilers from the `export CC CXX` above
-    cmake .. -DNOVA_SIMD=ON -DSSE=OFF -DSSE2=OFF -DNO_X11=ON -DINSTALL_HELP=OFF -DSC_QT=OFF -DSC_IDE=OFF -DSC_EL=OFF -DSC_ED=OFF -DSC_VIM=OFF -DSC_HIDAPI=OFF -DSUPERNOVA=OFF -DNO_AVAHI=ON -DENABLE_TESTSUITE=OFF -DAUDIOAPI=bela
-    make
-
-The `make` step will take a little while, about 30 minutes when using plain `gcc` or `ccache` (you can try `make -j2` or `make -j3` with `distcc`), more like 10 minutes when using `distcc`. It seems it is stuck for a long time at compiling the `BinaryOpUGens.cpp`, but it will get past that.
-
-Next we install:
-
-    make install
-
-### Cross-compiling (recommended, supported)
+### Prerequisites [cross-compiling only]
 
 On a Linux machine:
 
-- you need a built bela-image-builder, or just copy the whole filesystem from the board you want to build for
-- download a cross compiler, e.g., for Bela Images v0.3.x :  http://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/arm-linux-gnueabihf/gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueabihf.tar.xz
-- create a file with the cross-toolchain details, e.g.: `~/Toolchain-arm-linux-gnueabihf.cmake` which contains something like this (edit the `SYSROOT` and `GCC_BASE` variables)
+- you need access to the files that are on Bela's filesystem. The easiest way to do this is to copy the whole filesystem from the board you want to build for, or mount that filesystem remotely with `sshfs`.
+- download a cross compiler that matches the one on the board version you are targeting. For Bela Images v0.3.x, use [gcc-6.3.1](http://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/arm-linux-gnueabihf/gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueabihf.tar.xz).
+- create a file with the cross-toolchain details, e.g.: `~/Toolchain-arm-linux-gnueabihf.cmake` which contains something like this (edit the `SYSROOT` to point to the root of the Bela filesystem and `GCC_BASE` to point to the compiler you are going to use).
 
-````
+```
 SET(CMAKE_SYSTEM_NAME Linux)
 SET(CMAKE_SYSTEM_VERSION 1)
 
@@ -146,21 +64,112 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # for xeno-config an bela-config w
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 ```
+
 - create a couple of symlinks to make things easier:
 ```
 ln -s ~/bela-image-builder-stretch/rootfs/usr/xenomai /usr/xenomai
 ln -s ~/bela-image-builder-stretch/rootfs/lib/arm-linux-gnueabihf/ /lib/arm-linux-gnueabihf
 ```
-- configure:
+
+### Prerequisites [native building only]
+
+Building SuperCollider on the board using the on-boar compiler is slow, so we recommend you use `distcc` to make all your builds faster by off-loading the actual compilation to your host computer. You need to:
+* install an arm-linux-gnueabihf capabale `gcc-6.3` cross-compiler on your host.
+* then follow instructions here to setup a working distcc environment https://forum.bela.io/d/724-distcc-distributed-compilation-with-bela
+* on the host, launch `distccd` with something like `distccd --verbose --no-detach --daemon --allow 192.168.7.2 --log-level error --log-file ~/distccd.log` (and then `tail ~/distccd.log` for errors)
+* then on the board run the following before the `cmake` commands below:
+
 ```
-cd supercollider
-mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=~/Toolchain-arm-linux-gnueabihf.cmake -DNOVA_SIMD=ON -DSSE=OFF -DSSE2=OFF -DINSTALL_HELP=OFF -DNO_X11=ON -DSC_QT=OFF -DSC_IDE=OFF -DSC_EL=OFF -DSC_ED=OFF -DSC_VIM=OFF -DSC_HIDAPI=OFF -DSUPERNOVA=OFF -DNO_AVAHI=ON -DENABLE_TESTSUITE=OFF -DAUDIOAPI=bela -DSC_ABLETON_LINK=ON -DCMAKE_INSTALL_PREFIX=/usr/
+export DISTCC_HOSTS="192.168.7.1"
+export CC="distcc-clang" # or other as appropriate, see forum post above
+export CXX="distcc-clang++" # or other as appropriate, see forum post above
 ```
-- build:
+
+NOTE: make sure you don't pass `-march=native` to the compiler when using `distcc`, or it will compile natively. Therefore, make sure you do NOT pass `-DNATIVE=ON` to `cmake`, as per below
+
+Building
+--------
+
+### Step 1: Obtain the source code
+
+SuperCollider is hosted on Github: https://github.com/SuperCollider/SuperCollider
+
+Obtaining the SuperCollider source code can be done either by downloading a release tarball, or by cloning the repository.
+
+SuperCollider releases are available to download here: https://github.com/supercollider/supercollider/releases
+
+Cloning the repository can be done with the following command:
+
+    git clone --recurse-submodules https://github.com/SuperCollider/SuperCollider.git
+
+The `--recurse-submodules` option will clone the repository's submodules which are needed to build SuperCollider. The submodules can also be obtained by navigating to the root of your locally cloned SuperCollider repository and running the following command:
+
+    git submodule update --init --recursive
+
+**Note**: in order to run the commands above on Bela itself, you need to connect the device to the internet.
+Alternatively, if you are going to build natively, but the board is not connected to the internet, you can run them on an internet-connected machine and `scp` the whole folder to Bela.
+
+### Step 2: Make a build directory
+
+First, `cd` into the root of the SuperCollider source directory (where this file resides).
+
+Create a build directory and `cd` into it:
+
+    mkdir build
+    cd build
+
+You can actually name this whatever you want, allowing you to have multiple independent build directories. If your SuperCollider source is also a git repository, the `.gitignore` file is configured to ignore files of the form `build*`.
+
+### Step 3: Set CMake flags
+
+Here we define the configuration of SuperCollider and we select which components we want to build.
+SuperCollider runs headless on Bela (so no Sc IDE), there is no support for SuperNova and no need for QT, so we only need to build `sclang`, `scsynth` and the UGens.
+
+#### Native 
+
+Here's the command with `distcc` (it will infer the compilers from the `export ...` lines above (if you did set up `distcc`), or use the default compilers otherwise.
+
+Note that if you set `CC=clang` and `CXX=clang++` on Bela image v0.3.x (which has `clang-3.9`), you should add:
 ```
-make -j20
+-DSC_ALBETON_LINK=OFF -DSC_CLANG_USES_LIBSTDCPP=ON
 ```
+as explained in `README_LINUX.md`.
+
+```
+cmake .. -DNOVA_SIMD=ON -DSSE=OFF -DSSE2=OFF -DINSTALL_HELP=OFF -DNO_X11=ON -DSC_QT=OFF -DSC_IDE=OFF -DSC_EL=OFF -DSC_ED=OFF \
+	-DSC_VIM=OFF -DSC_HIDAPI=OFF -DSUPERNOVA=OFF -DNO_AVAHI=ON -DENABLE_TESTSUITE=OFF -DAUDIOAPI=bela \
+		-DSC_ABLETON_LINK=ON -DCMAKE_INSTALL_PREFIX=/usr/
+```
+
+#### Cross-compiling
+
+```
+cmake .. -DNOVA_SIMD=ON -DSSE=OFF -DSSE2=OFF -DINSTALL_HELP=OFF -DNO_X11=ON -DSC_QT=OFF -DSC_IDE=OFF -DSC_EL=OFF -DSC_ED=OFF \
+	-DSC_VIM=OFF -DSC_HIDAPI=OFF -DSUPERNOVA=OFF -DNO_AVAHI=ON -DENABLE_TESTSUITE=OFF -DAUDIOAPI=bela \
+		-DSC_ABLETON_LINK=ON -DCMAKE_INSTALL_PREFIX=/usr/ -DCMAKE_TOOLCHAIN_FILE=~/Toolchain-arm-linux-gnueabihf.cmake
+```
+
+### Step 4: Build
+
+If CMake ran successfully without errors, you are ready to move on to building. You can freely alternate between building and setting CMake flags.
+
+After setting your CMake flags, just run
+
+    make
+
+If you are doing a native build with `distcc` you can try `make -j3` to improve the build speed.
+
+And to install, run, for a native build:
+
+    make install
+
+for a cross-build, where you have Bela's live filesystem mounted locally via `sshfs` or other magic:
+
+	DESTDIR=~/bbb/ make install
+
+Building a Debian package for Bela
+-------------------------
+
 - create a debian package to be installed on the board:
 ```
 cpack -G DEB -D CPACK_PACKAGE_CONTACT="Your Name <your.name@domain.com>" -D CPACK_DEBIAN_PACKAGE_ARCHITECTURE="armhf" -D CPACK_CMAKE_GENERATOR=Ninja
@@ -168,20 +177,18 @@ cpack -G DEB -D CPACK_PACKAGE_CONTACT="Your Name <your.name@domain.com>" -D CPAC
 (the `CPACK_CMAKE_GENERATOR=Ninja` is a trick to prevent the `preinstall` target from rebuilding the whole thing slower (see [here](https://stackoverflow.com/a/57530945/2958741)).
 
 Running it
-==========
+-------------------------
 
 Just run the executable like this:
 
-       scsynth -u 57110 -z 16
+       scsynth -u 57110 -z 16 -B 0.0.0.0
 
-The `-u` flag tells it which UDP port to listen on, and with the `-z` flag we choose scsynth's internal blocksize. We need to do this because scsynth's default internal buffer size (64) is bigger than the hardware buffer size (16), so dividing hardware by internal returned 0 buffers per callback. To make it run, you need to add the command-line argument "-z 16" (or presumably make the hardware buffer size bigger).
+The `-u` flag tells it which UDP port to listen on, with the `-z` flag we choose scsynth's internal blocksize and `-B 0.0.0.0` we allow `scsynth` to receive commands from any device on the network (which by default includes only Bela and your computer).
 
 So now you should have scsynth running on the device. You should be able to send OSC commands to it from SuperCollider running on your main computer:
 
     // These commands are to be run in SUPERCOLLIDER running on your MAIN computer. (I guess you could run them on the device too if you wanted.)
-    Server.default = s = Server("belaServer", NetAddr("192.168.7.2", 57110));
-    s.initTree;
-    s.startAliveThread;
+    Server.default = Server.remote("belaServer", NetAddr("192.168.7.2", 57110));
     SynthDef("funsound", { Out.ar(0, 0.5 * Pan2.ar(SinOsc.ar(LFNoise1.kr(2).exprange(100, 1000)), LFNoise1.kr(2))) }).add;
     x = Synth("funsound");
     SynthDef("bish", { Out.ar(0, PinkNoise.ar * EnvGen.ar(Env.perc, Impulse.kr(2))) }).add;
@@ -239,7 +246,7 @@ Examples
 ======================================================
 
 Example files are available in the folder ```examples/Bela```, and will be installed to ```/usr/share/SuperCollider/examples/Bela```.
-
+More examples are available on [Bela](https://github.com/BelaPlatform/Bela/tree/master/examples/SuperCollider) and can be accessed through the Bela IDE.
 
 Running scsynth *and* sclang
 ======================================================
@@ -332,7 +339,6 @@ Every 0.5s: cat /proc/xenomai/sched/stat                                        
 CPU  PID    MSW        CSW        XSC        PF    STAT       %CPU  NAME
   0  0      0          835043     0          0     00018000   79.0  [ROOT]
   0  14390  5          5          14         1     000480c0    0.0  scsynth
-  0  14404  34655      69562      69517      0     00048042    4.4  mAudioSyncSignalTask
   0  14405  1          69782      104649     0     00048046   14.3  bela-audio
   0  0      0          744555     0          0     00000000    0.8  [IRQ16: [timer]]
   0  0      0          34899      0          0     00000000    1.0  [IRQ181: rtdm_pruss_irq_irq]
@@ -340,18 +346,15 @@ CPU  PID    MSW        CSW        XSC        PF    STAT       %CPU  NAME
 
 the "MSW" column indicates mode switches; this number should NEVER increase in the bela-audio thread. It is fine if it increases on a task that runs occasionally, but keep in mind that each mode switch carries an additional overhead.
 
-Optional: Bonus level: Even more plugins (sc3-plugins)
+Additional notes
 ======================================================
 
-SuperCollider comes with a built-in set of UGen plugins but there's an extra set in the community **sc3-plugins** project. So if you want, you can also install those:
+Bela's SuperCollider affects the interface with the UGens, therefore UGens built for "generic" SuperCollider may not run fine with SuperCollider built for Bela.
+When using UGens on Bela, always make sure you build them against Sc with `-DAUDIOAPI=bela` enabled.
 
-    cd /extrabela
-    git clone --recursive https://github.com/supercollider/sc3-plugins.git
-    cd sc3-plugins
-    mkdir build
-    cd build
-    cmake -DSC_PATH=~/supercollider -DCMAKE_C_COMPILER=/usr/lib/ccache/gcc-4.8 -DCMAKE_CXX_COMPILER=/usr/lib/ccache/g++-4.8 -DCMAKE_C_FLAGS="-march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -O2" -DCMAKE_CPP_FLAGS="-march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -O2" ..
-    make
-    make install
+Contributors to this document
+-----------------------------
 
-These are basically just the instructions from the README of [the sc3-plugins project](https://github.com/supercollider/sc3-plugins/).
+- nescivi (marije baalman)
+- dan stowell
+- giulio moro
