@@ -106,6 +106,8 @@ SC_BelaDriver::~SC_BelaDriver() {
 // Return true on success; returning false halts the program.
 bool SC_BelaDriver::BelaSetup(const BelaContext* belaContext) {
     mBelaSampleRate = belaContext->audioSampleRate;
+    delete mWorld->mBelaScope;
+    mWorld->mBelaScope = nullptr;
     if (mWorld->mBelaMaxScopeChannels > 0)
         mWorld->mBelaScope = new BelaScope(mWorld->mBelaMaxScopeChannels, mBelaSampleRate, belaContext->audioFrames);
     return true;
