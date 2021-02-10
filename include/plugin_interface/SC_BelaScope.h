@@ -12,10 +12,7 @@ public:
         buffer = new float[bufferSamples]();
     }
 
-    ~BelaScope() {
-        if (buffer)
-            delete buffer;
-    }
+    ~BelaScope() { delete[] buffer; }
 
     void logBuffer() {
         if (touched) {
