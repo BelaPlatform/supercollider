@@ -136,13 +136,13 @@ struct HiddenWorld {
     uint32 mBelaAnalogOutputChannels;
     uint32 mBelaDigitalChannels;
     float mBelaHeadphoneLevel;
-    float mBelaPGAGainLeft;
-    float mBelaPGAGainRight;
+    float mBelaPgaGainLeft;
+    float mBelaPgaGainRight;
     bool mBelaSpeakerMuted;
-    float mBelaDACLevel;
-    float mBelaADCLevel;
+    float mBelaDacLevel;
+    float mBelaAdcLevel;
     uint32 mBelaNumMuxChannels;
-    uint32 mBelaPRU;
+    uint32 mBelaPru;
 #endif
 
     const char* mInDeviceName;

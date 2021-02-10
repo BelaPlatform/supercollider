@@ -387,11 +387,11 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
         && (mWorld->hw->mBelaHeadphoneLevel <= 0.)) { // headphone output level (0dB max; -63.5dB min)
         settings->headphoneLevel = mWorld->hw->mBelaHeadphoneLevel;
     }
-    if ((mWorld->hw->mBelaPGAGainLeft >= 0) && (mWorld->hw->mBelaPGAGainLeft <= 59.5)) { // (0db min; 59.5db max)
-        settings->pgaGain[0] = mWorld->hw->mBelaPGAGainLeft;
+    if ((mWorld->hw->mBelaPgaGainLeft >= 0) && (mWorld->hw->mBelaPgaGainLeft <= 59.5)) { // (0db min; 59.5db max)
+        settings->pgaGain[0] = mWorld->hw->mBelaPgaGainLeft;
     }
-    if ((mWorld->hw->mBelaPGAGainRight >= 0) && (mWorld->hw->mBelaPGAGainRight <= 59.5)) { // (0db min; 59.5db max)
-        settings->pgaGain[1] = mWorld->hw->mBelaPGAGainRight;
+    if ((mWorld->hw->mBelaPgaGainRight >= 0) && (mWorld->hw->mBelaPgaGainRight <= 59.5)) { // (0db min; 59.5db max)
+        settings->pgaGain[1] = mWorld->hw->mBelaPgaGainRight;
     }
 
     if (mWorld->hw->mBelaSpeakerMuted) {
@@ -399,17 +399,17 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     } else {
         settings->beginMuted = 0;
     }
-    if ((mWorld->hw->mBelaDACLevel >= -63.5) && (mWorld->hw->mBelaDACLevel <= 0.)) { // (0dB max; -63.5dB min)
-        settings->dacLevel = mWorld->hw->mBelaDACLevel;
+    if ((mWorld->hw->mBelaDacLevel >= -63.5) && (mWorld->hw->mBelaDacLevel <= 0.)) { // (0dB max; -63.5dB min)
+        settings->dacLevel = mWorld->hw->mBelaDacLevel;
     }
-    if ((mWorld->hw->mBelaADCLevel >= -12) && (mWorld->hw->mBelaADCLevel <= 0.)) { // (0dB max; -12dB min)
-        settings->adcLevel = mWorld->hw->mBelaADCLevel;
+    if ((mWorld->hw->mBelaAdcLevel >= -12) && (mWorld->hw->mBelaAdcLevel <= 0.)) { // (0dB max; -12dB min)
+        settings->adcLevel = mWorld->hw->mBelaAdcLevel;
     }
 
     settings->numMuxChannels = mWorld->hw->mBelaNumMuxChannels;
 
-    if ((mWorld->hw->mBelaPRU == 0) || (mWorld->hw->mBelaPRU == 1)) {
-        settings->pruNumber = mWorld->hw->mBelaPRU;
+    if ((mWorld->hw->mBelaPru == 0) || (mWorld->hw->mBelaPru == 1)) {
+        settings->pruNumber = mWorld->hw->mBelaPru;
     }
 
     scprintf("SC_BelaDriver: >>DriverSetup - Running on PRU (%i)\nConfigured with \n (%i) analog input and (%i) analog "

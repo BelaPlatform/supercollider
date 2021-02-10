@@ -172,13 +172,13 @@ int scsynth_main(int argc, char** argv) {
     options.mBelaAnalogOutputChannels = 0;
     options.mBelaDigitalChannels = 0;
     options.mBelaHeadphoneLevel = -6.;
-    options.mBelaPGAGainLeft = 20;
-    options.mBelaPGAGainRight = 20;
+    options.mBelaPgaGainLeft = 20;
+    options.mBelaPgaGainRight = 20;
     options.mBelaSpeakerMuted = 0;
-    options.mBelaADCLevel = 0;
-    options.mBelaDACLevel = 0;
+    options.mBelaAdcLevel = 0;
+    options.mBelaDacLevel = 0;
     options.mBelaNumMuxChannels = 0;
-    options.mBelaPRU = 1;
+    options.mBelaPru = 1;
     options.mBelaMaxScopeChannels = 0;
 #endif // SC_BELA
 
@@ -339,11 +339,11 @@ int scsynth_main(int argc, char** argv) {
             break;
         case 'X':
             checkNumArgs(2);
-            options.mBelaPGAGainLeft = atof(argv[j + 1]);
+            options.mBelaPgaGainLeft = atof(argv[j + 1]);
             break;
         case 'Y':
             checkNumArgs(2);
-            options.mBelaPGAGainRight = atof(argv[j + 1]);
+            options.mBelaPgaGainRight = atof(argv[j + 1]);
             break;
         case 'A':
             checkNumArgs(2);
@@ -351,11 +351,11 @@ int scsynth_main(int argc, char** argv) {
             break;
         case 'x':
             checkNumArgs(2);
-            options.mBelaDACLevel = atof(argv[j + 1]);
+            options.mBelaDacLevel = atof(argv[j + 1]);
             break;
         case 'y':
             checkNumArgs(2);
-            options.mBelaADCLevel = atof(argv[j + 1]);
+            options.mBelaAdcLevel = atof(argv[j + 1]);
             break;
         case 'g':
             checkNumArgs(2);
@@ -363,7 +363,7 @@ int scsynth_main(int argc, char** argv) {
             break;
         case 'T':
             checkNumArgs(2);
-            options.mBelaPRU = atoi(argv[j + 1]);
+            options.mBelaPru = atoi(argv[j + 1]);
             break;
         case 'E':
             checkNumArgs(2);
