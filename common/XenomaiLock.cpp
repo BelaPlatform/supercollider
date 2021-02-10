@@ -89,12 +89,12 @@ XenomaiMutex::XenomaiMutex() {
             }
         }
     }
-    enabled = true;
+    m_enabled = true;
 }
 
 XenomaiMutex::~XenomaiMutex() {
     xprintf("Destroy mutex %p\n", &m_mutex);
-    if (enabled)
+    if (m_enabled)
         __wrap_pthread_mutex_destroy(&m_mutex);
 }
 
@@ -103,10 +103,10 @@ XenomaiMutex::~XenomaiMutex() {
 // - if it fails, try to turn the current thread into a cobalt thread and call func() again
 // - if it fails again, just fail
 // - return true if it succeeds, or false if it fails
-// id and name are just for debugging purposes, while enabled is there because it saves duplicating some lines
-template <typename F, typename T> static bool tryOrRetryImpl(F&& func, bool enabled, T* id, const char* name) {
+// id and name are just for debugging purposes, while m_enabled is there because it saves duplicating some lines
+template <typename F, typename T> static bool tryOrRetryImpl(F&& func, bool m_enabled, T* id, const char* name) {
     xprintf("tid: %d ", getTid());
-    if (!enabled) {
+    if (!m_enabled) {
         xfprintf(stderr, "%s disabled %p\n", name, id);
         return false;
     }
@@ -142,17 +142,17 @@ template <typename F, typename T> static bool tryOrRetryImpl(F&& func, bool enab
 
 // condition resource_deadlock_would_occur instead of deadlocking. https://en.cppreference.com/w/cpp/thread/mutex/lock
 bool XenomaiMutex::try_lock() {
-    return tryOrRetry([this]() { return __wrap_pthread_mutex_trylock(&this->m_mutex); }, enabled);
+    return tryOrRetry([this]() { return __wrap_pthread_mutex_trylock(&this->m_mutex); }, m_enabled);
     // TODO: An implementation that can detect the invalid usage is encouraged to throw a std::system_error with error
     // condition resource_deadlock_would_occur instead of deadlocking.
 }
 
 void XenomaiMutex::lock() {
-    tryOrRetry([this]() { return __wrap_pthread_mutex_lock(&this->m_mutex); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_mutex_lock(&this->m_mutex); }, m_enabled);
 }
 
 void XenomaiMutex::unlock() {
-    tryOrRetry([this]() { return __wrap_pthread_mutex_unlock(&this->m_mutex); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_mutex_unlock(&this->m_mutex); }, m_enabled);
 }
 
 XenomaiConditionVariable::XenomaiConditionVariable() {
@@ -170,11 +170,11 @@ XenomaiConditionVariable::XenomaiConditionVariable() {
             }
         }
     }
-    enabled = true;
+    m_enabled = true;
 }
 
 XenomaiConditionVariable::~XenomaiConditionVariable() {
-    if (enabled) {
+    if (m_enabled) {
         notify_all();
         __wrap_pthread_cond_destroy(&m_cond);
     }
@@ -190,13 +190,13 @@ void XenomaiConditionVariable::wait(std::unique_lock<XenomaiMutex>& lck) {
 
     // It may throw system_error in case of failure (transmitting any error condition from the respective call to lock
     // or unlock). The predicate version (2) may also throw exceptions thrown by pred.
-    tryOrRetry(([this, &lck]() { return __wrap_pthread_cond_wait(&this->m_cond, &lck.mutex()->m_mutex); }), enabled);
+    tryOrRetry(([this, &lck]() { return __wrap_pthread_cond_wait(&this->m_cond, &lck.mutex()->m_mutex); }), m_enabled);
 }
 
 void XenomaiConditionVariable::notify_one() noexcept {
-    tryOrRetry([this]() { return __wrap_pthread_cond_signal(&this->m_cond); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_cond_signal(&this->m_cond); }, m_enabled);
 }
 
 void XenomaiConditionVariable::notify_all() noexcept {
-    tryOrRetry([this]() { return __wrap_pthread_cond_broadcast(&this->m_cond); }, enabled);
+    tryOrRetry([this]() { return __wrap_pthread_cond_broadcast(&this->m_cond); }, m_enabled);
 }
