@@ -414,13 +414,13 @@ World* World_New(WorldOptions* inOptions) {
         world->hw->mBelaAnalogOutputChannels = inOptions->mBelaAnalogOutputChannels;
         world->hw->mBelaDigitalChannels = inOptions->mBelaDigitalChannels;
         world->hw->mBelaHeadphoneLevel = inOptions->mBelaHeadphoneLevel;
-        world->hw->mBelaPGAGainLeft = inOptions->mBelaPGAGainLeft;
-        world->hw->mBelaPGAGainRight = inOptions->mBelaPGAGainRight;
+        world->hw->mBelaPgaGainLeft = inOptions->mBelaPgaGainLeft;
+        world->hw->mBelaPgaGainRight = inOptions->mBelaPgaGainRight;
         world->hw->mBelaSpeakerMuted = inOptions->mBelaSpeakerMuted;
-        world->hw->mBelaDACLevel = inOptions->mBelaDACLevel;
-        world->hw->mBelaADCLevel = inOptions->mBelaADCLevel;
+        world->hw->mBelaDacLevel = inOptions->mBelaDacLevel;
+        world->hw->mBelaAdcLevel = inOptions->mBelaAdcLevel;
         world->hw->mBelaNumMuxChannels = inOptions->mBelaNumMuxChannels;
-        world->hw->mBelaPRU = inOptions->mBelaPRU;
+        world->hw->mBelaPru = inOptions->mBelaPru;
         world->hw->mBelaMaxScopeChannels = inOptions->mBelaMaxScopeChannels;
 #endif // SC_BELA
 
