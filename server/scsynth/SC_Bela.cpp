@@ -173,16 +173,6 @@ void SC_BelaDriver::BelaAudioCallback(BelaContext* belaContext) {
             anaOutputs = sc_min(belaContext->analogOutChannels, static_cast<int>(mWorld->mNumOutputs - numOutputs));
         }
 
-        // THIS IS TO DO LATER -- LOOK AT CACHEING AND CONSTING TO IMPROVE EFFICIENCY
-        // cache I/O buffers
-        // for (int i = 0; i < minInputs; ++i) {
-        //	inBuffers[i] = (sc_jack_sample_t*)jack_port_get_buffer(inPorts[i], numSamples);
-        //}
-        //
-        // for (int i = 0; i < minOutputs; ++i) {
-        //	outBuffers[i] = (sc_jack_sample_t*)jack_port_get_buffer(outPorts[i], numSamples);
-        //}
-
         // main loop
         mOSCbuftime = (static_cast<int64>(tspec.tv_sec + kSECONDS_FROM_1900_to_1970) << 32)
             + static_cast<int64>(tspec.tv_nsec * kNanosToOSCunits);
@@ -275,9 +265,8 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     settings->render = [](BelaContext* belaContext, void* userData) {
         static_cast<SC_BelaDriver*>(userData)->BelaAudioCallback(belaContext);
     };
-    // if the feature is supported on Bela, add a callback to be called when
-    // the audio thread stops. This is useful e.g.: to gracefully exit from
-    // scsynth when pressing the Bela button
+    // add a callback to be called when the audio thread stops. This is useful
+    // e.g.: to gracefully exit from scsynth when pressing the Bela button
     settings->audioThreadDone = [](BelaContext*, void* userData) {
         auto* driver = static_cast<SC_BelaDriver*>(userData);
         if (driver)
