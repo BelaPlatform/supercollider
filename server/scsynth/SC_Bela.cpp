@@ -74,6 +74,9 @@ private:
     int mInputChannelCount = 0, mOutputChannelCount = 0;
     uint32 mSCBufLength;
     float mBelaSampleRate = 0;
+    int audioInChannels;
+    int audioOutChannels;
+    bool mockCallToSetupDone = false;
 };
 
 SC_BelaDriver* SC_BelaDriver::s_instance = nullptr;
@@ -105,6 +108,12 @@ SC_BelaDriver::~SC_BelaDriver() {
 
 // Return true on success; returning false halts the program.
 bool SC_BelaDriver::BelaSetup(const BelaContext* belaContext) {
+    if (!mockCallToSetupDone) {
+        mockCallToSetupDone = true;
+        audioInChannels = belaContext->audioInChannels;
+        audioOutChannels = belaContext->audioOutChannels;
+        return true;
+    }
     mBelaSampleRate = belaContext->audioSampleRate;
     delete mWorld->mBelaScope;
     mWorld->mBelaScope = nullptr;
@@ -306,11 +315,16 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // - a given number of analog channels
     // - applying the audio expander capelet on these channels
     // Currently (as of 1.4.0) the Bela API does not allow to
-    // know the number of audio channels available.
+    // know the number of audio channels available, therefore we do a mock
+    // start first and from the first call to setup we find out the number of
+    // audio channels available
 
-    BelaHwConfig* cfg = Bela_HwConfig_new(Bela_detectHw());
-    int extraAudioIn = mWorld->mNumInputs - cfg->audioInChannels;
-    int extraAudioOut = mWorld->mNumOutputs - cfg->audioOutChannels;
+    if (Bela_initAudio(settings, this) != 0) {
+        scprintf("Error in SC_BelaDriver::DriverSetup() (mock call): unable to initialise audio\n");
+        return false;
+    }
+    int extraAudioIn = mWorld->mNumInputs - audioInChannels;
+    int extraAudioOut = mWorld->mNumOutputs - audioOutChannels;
     // if we need more audio channels than there actually are audio
     // channels, make sure we have some extra analogs
     if (extraAudioIn > 0) {
@@ -357,13 +371,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // enable the audio expander capelet for the first few "analog as audio" channels
     // inputs and ...
     for (int n = 0; n < extraAudioIn; ++n) {
-        scprintf("Using analog in %d as audio in %d\n", n, n + cfg->audioInChannels);
+        scprintf("Using analog in %d as audio in %d\n", n, n + audioInChannels);
         settings->audioExpanderInputs |= (1 << n);
     }
 
     // ... outputs
     for (int n = 0; n < extraAudioOut; ++n) {
-        scprintf("Using analog out %d as audio out %d\n", n, n + cfg->audioOutChannels);
+        scprintf("Using analog out %d as audio out %d\n", n, n + audioOutChannels);
         settings->audioExpanderOutputs |= (1 << n);
     }
 
@@ -427,7 +441,6 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     *outNumSamples = settings->periodSize;
     *outSampleRate = mBelaSampleRate;
     Bela_InitSettings_free(settings);
-    Bela_HwConfig_delete(cfg);
 
     // Set up interrupt handler to catch Control-C and SIGTERM
 
