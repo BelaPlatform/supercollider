@@ -37,7 +37,8 @@ static inline pid_t getTid() {
 // See https://www.xenomai.org/pipermail/xenomai/2019-January/040203.html
 static void initializeXenomai() {
     xprintf("initializeXenomai\n");
-    int argc = 2;
+    enum { argc = 2 };
+    int argcInt = argc;
     char blankOpt[] = "";
 #ifdef PRINT_XENO_LOCK
     char traceOpt[] = "--trace";
@@ -47,7 +48,7 @@ static void initializeXenomai() {
 
     char* const argv[argc] = { blankOpt, traceOpt };
     char* const* argvPtrs[argc] = { &argv[0], &argv[1] };
-    xenomai_init(&argc, argvPtrs);
+    xenomai_init(&argcInt, argvPtrs);
 }
 
 static bool turnIntoCobaltThread(bool recurred = false) {
