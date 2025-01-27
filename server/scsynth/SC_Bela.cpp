@@ -74,6 +74,7 @@ private:
     int mInputChannelCount = 0, mOutputChannelCount = 0;
     uint32 mSCBufLength;
     float mBelaSampleRate = 0;
+    BelaHwConfig cfg;
 };
 
 SC_BelaDriver* SC_BelaDriver::s_instance = nullptr;
@@ -259,9 +260,6 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     BelaInitSettings* settings = Bela_InitSettings_alloc();
     Bela_defaultSettings(settings);
 
-    settings->setup = [](BelaContext* belaContext, void* userData) {
-        return static_cast<SC_BelaDriver*>(userData)->BelaSetup(belaContext);
-    };
     settings->render = [](BelaContext* belaContext, void* userData) {
         static_cast<SC_BelaDriver*>(userData)->BelaAudioCallback(belaContext);
     };
@@ -303,12 +301,36 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // before we can request Bela for:
     // - a given number of analog channels
     // - applying the audio expander capelet on these channels
-    // Currently (as of 1.4.0) the Bela API does not allow to
-    // know the number of audio channels available.
+    // Currently  the Bela API does not allow to
+    // know the number of audio channels available, so
+    // we first do a dummy Bela_initAudio() call which calls
+    // an ephemeral setup function from which we get and store
+    // the relevant data that we can use for the rest of our
+    // initialisation
+    settings->setup = [](BelaContext* context, void* userData) {
+        BelaHwConfig& cfg = static_cast<SC_BelaDriver*>(userData)->cfg;
+        cfg.audioSampleRate = context->audioSampleRate;
+        cfg.audioInChannels = context->audioInChannels;
+        cfg.audioOutChannels = context->audioOutChannels;
+        cfg.analogInChannels = context->analogInChannels;
+        cfg.analogOutChannels = context->analogOutChannels;
+        cfg.digitalChannels = context->digitalChannels;
+        return true;
+    };
+    if (Bela_initAudio(settings, this) != 0) {
+        scprintf("Error in SC_BelaDriver::DriverSetup(): unable to initialise audio dummy\n");
+        return false;
+    }
+    Bela_cleanupAudio();
+    // now we have all the relevant data and we can perform
+    // the actual initialisation later
+    // set the correct setup function
+    settings->setup = [](BelaContext* belaContext, void* userData) {
+        return static_cast<SC_BelaDriver*>(userData)->BelaSetup(belaContext);
+    };
 
-    BelaHwConfig* cfg = Bela_HwConfig_new(Bela_detectHw());
-    int extraAudioIn = mWorld->mNumInputs - cfg->audioInChannels;
-    int extraAudioOut = mWorld->mNumOutputs - cfg->audioOutChannels;
+    int extraAudioIn = mWorld->mNumInputs - cfg.audioInChannels;
+    int extraAudioOut = mWorld->mNumOutputs - cfg.audioOutChannels;
     // if we need more audio channels than there actually are audio
     // channels, make sure we have some extra analogs
     if (extraAudioIn > 0) {
@@ -355,13 +377,13 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     // enable the audio expander capelet for the first few "analog as audio" channels
     // inputs and ...
     for (int n = 0; n < extraAudioIn; ++n) {
-        scprintf("Using analog in %d as audio in %d\n", n, n + cfg->audioInChannels);
+        scprintf("Using analog in %d as audio in %d\n", n, n + cfg.audioInChannels);
         settings->audioExpanderInputs |= (1 << n);
     }
 
     // ... outputs
     for (int n = 0; n < extraAudioOut; ++n) {
-        scprintf("Using analog out %d as audio out %d\n", n, n + cfg->audioOutChannels);
+        scprintf("Using analog out %d as audio out %d\n", n, n + cfg.audioOutChannels);
         settings->audioExpanderOutputs |= (1 << n);
     }
 
@@ -425,7 +447,6 @@ bool SC_BelaDriver::DriverSetup(int* outNumSamples, double* outSampleRate) {
     *outNumSamples = settings->periodSize;
     *outSampleRate = mBelaSampleRate;
     Bela_InitSettings_free(settings);
-    Bela_HwConfig_delete(cfg);
 
     // Set up interrupt handler to catch Control-C and SIGTERM
 
