@@ -72,10 +72,6 @@ foreach(plugin ${plugin_sources})
 endforeach(plugin)
 
 if(AUDIOAPI STREQUAL bela)
-    # The Bela lib will have its own set of libraries and includes
-    # However, the Bela audio backend for SC has some direct calls to Xenomai
-    # Therefore we need to get flags for those as well
-    find_package(Xenomai REQUIRED)
     find_package(Bela REQUIRED)
     message(STATUS "Found Bela libraries: ${BELA_LIBRARIES}")
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
@@ -89,9 +85,9 @@ if(BELA_FOUND)
     add_library(BelaUGens MODULE
         BelaUGens.cpp
     )
-    add_definitions("-DSC_BELA" ${XENOMAI_DEFINITIONS} ${BELA_DEFINITIONS})
-    include_directories(${XENOMAI_INCLUDE_DIRS} ${BELA_INCLUDE_DIRS})
-    target_link_libraries(BelaUGens PRIVATE ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES})
+    add_definitions("-DSC_BELA" ${BELA_DEFINITIONS})
+    include_directories(${BELA_INCLUDE_DIRS})
+    target_link_libraries(BelaUGens PRIVATE ${BELA_LIBRARIES})
 
     list(APPEND plugins BelaUGens)
 endif()
@@ -146,9 +142,6 @@ add_library(ML_UGens MODULE
 if(NOT NO_LIBSNDFILE)
 	set(diskio_sources DiskIO_UGens.cpp)
 
-	if (XENOMAI_FOUND)
-		list(APPEND diskio_sources ../../common/XenomaiLock.cpp)
-	endif()
 	add_library(DiskIO_UGens MODULE ${diskio_sources})
 
 	if(SNDFILE_FOUND)

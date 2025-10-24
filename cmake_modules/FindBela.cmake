@@ -15,6 +15,15 @@
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
+function(run_bela_config FLAG OUT)
+    execute_process(COMMAND ${BELA_CONFIG} ${FLAG} OUTPUT_VARIABLE OUTP RESULT_VARIABLE RET)
+    if(RET)
+        message(FATAL_ERROR "bela-config failed")
+    endif()
+    string(STRIP "${OUTP}" OUTP)
+    set(${OUT} "${OUTP}" PARENT_SCOPE)
+endfunction()
+
 if(BELA_CFLAGS AND BELA_CXXFLAGS AND BELA_LDFLAGS)
     # in cache already
     set(BELA_FOUND TRUE)
@@ -41,16 +50,12 @@ else()
     message("Searching for BELA man: config ${BELA_CONFIG}")
 
     if(BELA_CONFIG)
-        execute_process(COMMAND ${BELA_CONFIG} --defines OUTPUT_VARIABLE BELA_DEFINITIONS)
-        string(STRIP "${BELA_DEFINITIONS}" BELA_DEFINITIONS)
-        execute_process(COMMAND ${BELA_CONFIG} --includes OUTPUT_VARIABLE BELA_INCLUDE_DIRS)
-        string(STRIP "${BELA_INCLUDE_DIRS}" BELA_INCLUDE_DIRS)
-        execute_process(COMMAND ${BELA_CONFIG} --libraries OUTPUT_VARIABLE BELA_LIBRARIES)
-        string(STRIP "${BELA_LIBRARIES}" BELA_LIBRARIES)
-        execute_process(COMMAND ${BELA_CONFIG} --cflags OUTPUT_VARIABLE BELA_C_FLAGS)
-        string(STRIP "${BELA_C_FLAGS}" BELA_C_FLAGS)
-        execute_process(COMMAND ${BELA_CONFIG} --cxxflags OUTPUT_VARIABLE BELA_CXX_FLAGS)
-        string(STRIP "${BELA_CXX_FLAGS}" BELA_CXX_FLAGS)
+        # each of these calls may throw a FATAL_ERROR
+        run_bela_config(--defines BELA_DEFINITIONS)
+        run_bela_config(--includes BELA_INCLUDE_DIRS)
+        run_bela_config(--libraries BELA_LIBRARIES)
+        run_bela_config(--cflags BELA_C_FLAGS)
+        run_bela_config(--cxxflags BELA_CXX_FLAGS)
         set(BELA_CXX_FLAGS "${BELA_CXX_FLAGS} -DBELA_DONT_INCLUDE_UTILITIES")
 
         set(BELA_FOUND TRUE)
@@ -67,9 +72,7 @@ else()
             message(STATUS "BELA_CXX_FLAGS: ${BELA_CXX_FLAGS}")
         endif()
     else()
-        if(BELA_FIND_REQUIRED)
-            message(FATAL_ERROR "Could not find BELA")
-        endif()
+        message(FATAL_ERROR "Could not find BELA")
     endif()
 
     # show the BELA_ variables only in the advanced view
