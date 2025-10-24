@@ -38,10 +38,9 @@
 #    include <sys/wait.h>
 #endif
 
-#ifdef __COBALT__
-#    include "XenomaiLock.h"
-static XenomaiInitializer xenomaiInitializer;
-#endif // __COBALT__
+#ifdef SC_BELA
+#    include <Bela.h>
+#endif // SC_BELA
 
 #ifdef _WIN32
 
@@ -168,6 +167,7 @@ int scsynth_main(int argc, char** argv) {
     WorldOptions options;
 
 #ifdef SC_BELA
+    Bela_initRtBackend(); // non compulsory, but avoids underruns on startup
     // defaults
     options.mBelaAnalogInputChannels = 0;
     options.mBelaAnalogOutputChannels = 0;

@@ -31,6 +31,9 @@
 #include "SC_InlineBinaryOp.h"
 #include <stdlib.h>
 #include <algorithm>
+#ifdef SC_BELA
+#    include <Bela.h>
+#endif // SC_BELA
 
 #ifndef _WIN32
 #    include <sys/time.h>
@@ -354,7 +357,7 @@ void SC_AudioDriver::RunThread() {
         // wait for sync
         mAudioSync.WaitNext();
 #ifdef SC_BELA
-        rt_print_flush_buffers();
+        Bela_printFlushBuffers();
 #endif // SC_BELA
 
         reinterpret_cast<SC_Lock*>(mWorld->mNRTLock)->lock();
