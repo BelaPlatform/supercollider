@@ -50,10 +50,6 @@ if(AUDIOAPI STREQUAL jack)
 elseif(AUDIOAPI STREQUAL portaudio AND SYSTEM_PORTAUDIO)
     find_package(Portaudio REQUIRED)
 elseif(AUDIOAPI STREQUAL bela)
-    # The Bela lib will have its own set of libraries and includes
-    # However, the Bela audio backend for SC has some direct calls to Xenomai
-    # Therefore we need to get flags for those as well
-    find_package(Xenomai REQUIRED)
     find_package(Bela REQUIRED)
     message(STATUS "Found Bela libraries: ${BELA_LIBRARIES}")
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG)
@@ -120,10 +116,6 @@ if (FFT_GREEN)
 	list(APPEND scsynth_sources ../../common/fftlib.c)
 endif()
 
-if(AUDIOAPI STREQUAL bela)
-    list(APPEND scsynth_sources ../../common/XenomaiLock.cpp)
-endif()
-
 include_directories(${CMAKE_SOURCE_DIR}/include/common
                     ${CMAKE_SOURCE_DIR}/common
                     ${CMAKE_SOURCE_DIR}/include/server
@@ -140,8 +132,8 @@ elseif (AUDIOAPI STREQUAL portaudio)
 	add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_PORTAUDIO")
 elseif (AUDIOAPI STREQUAL bela)
     list(APPEND scsynth_sources SC_Bela.cpp)
-    add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_BELA" "-DSC_BELA" ${XENOMAI_DEFINITIONS} ${BELA_DEFINITIONS})
-    include_directories(${XENOMAI_INCLUDE_DIRS} ${BELA_INCLUDE_DIRS})
+    add_definitions("-DSC_AUDIO_API=SC_AUDIO_API_BELA" "-DSC_BELA" ${BELA_DEFINITIONS})
+    include_directories(${BELA_INCLUDE_DIRS})
 endif()
 
 set (FINAL_BUILD 0) # disable final build for scsynth
@@ -224,7 +216,7 @@ if (AUDIOAPI STREQUAL jack)
 elseif(AUDIOAPI STREQUAL portaudio)
 	target_link_libraries(libscsynth PortAudio::PortAudio)
 elseif(AUDIOAPI STREQUAL bela)
-    target_link_libraries(libscsynth ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES} belaextra)
+    target_link_libraries(libscsynth ${BELA_LIBRARIES} belaextra)
 elseif(AUDIOAPI STREQUAL coreaudio)
 	target_link_libraries(libscsynth "-framework CoreAudio")
 endif()
@@ -269,7 +261,7 @@ add_executable(scsynth
 target_link_libraries(scsynth libscsynth)
 
 if(AUDIOAPI STREQUAL bela)
-    target_link_libraries(scsynth ${XENOMAI_LIBRARIES} ${BELA_LIBRARIES} belaextra)
+    target_link_libraries(scsynth ${BELA_LIBRARIES} belaextra)
 endif()
 
 if (PTHREADS_FOUND)
