@@ -24,7 +24,6 @@
  */
 
 #include "Bela.h"
-#include "cobalt/stdio.h"
 
 #include "SC_PlugIn.h"
 
@@ -149,10 +148,10 @@ void MultiplexAnalogIn_next_aaa(MultiplexAnalogIn* unit, int inNumSamples) {
         int muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
-                       context->analogInChannels, analogPin);
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
-                       context->multiplexerChannels, muxChannel);
+            Bela_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
+                         context->analogInChannels, analogPin);
+            Bela_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
+                         context->multiplexerChannels, muxChannel);
         } else {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
@@ -174,10 +173,10 @@ void MultiplexAnalogIn_next_aak(MultiplexAnalogIn* unit, int inNumSamples) {
         int analogPin = static_cast<int>(fin[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
-                       context->analogInChannels, analogPin);
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
-                       context->multiplexerChannels, muxChannel);
+            Bela_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
+                         context->analogInChannels, analogPin);
+            Bela_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
+                         context->multiplexerChannels, muxChannel);
         } else {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
@@ -199,10 +198,10 @@ void MultiplexAnalogIn_next_aka(MultiplexAnalogIn* unit, int inNumSamples) {
         int muxChannel = static_cast<int>(fmux[n]);
         if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
             || (muxChannel >= context->multiplexerChannels)) {
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
-                       context->analogInChannels, analogPin);
-            rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
-                       context->multiplexerChannels, muxChannel);
+            Bela_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
+                         context->analogInChannels, analogPin);
+            Bela_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
+                         context->multiplexerChannels, muxChannel);
         } else {
             // is there something like NI? analogReadNI(context, 0, analogPin);
             analogValue = multiplexerAnalogRead(context, analogPin, muxChannel);
@@ -220,10 +219,10 @@ void MultiplexAnalogIn_next_akk(MultiplexAnalogIn* unit, int inNumSamples) {
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels) || (muxChannel < 0)
         || (muxChannel >= context->multiplexerChannels)) {
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
-                   context->analogInChannels, analogPin);
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
-                   context->multiplexerChannels, muxChannel);
+        Bela_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
+                     context->analogInChannels, analogPin);
+        Bela_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
+                     context->multiplexerChannels, muxChannel);
         for (unsigned int n = 0; n < inNumSamples; n++) {
             out[n] = 0;
         }
@@ -242,12 +241,12 @@ void MultiplexAnalogIn_next_kkk(MultiplexAnalogIn* unit, int inNumSamples) {
     int muxChannel = static_cast<float>(IN0(1));
 
     if ((analogPin < 0) || (analogPin >= context->analogInChannels)) {
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
-                   context->analogInChannels, analogPin);
+        Bela_fprintf(stderr, "MultiplexAnalogIn warning: analog pin must be between %i and %i, it is %i\n", 0,
+                     context->analogInChannels, analogPin);
         OUT0(0) = 0.0;
     } else if ((muxChannel < 0) || (muxChannel >= context->multiplexerChannels)) {
-        rt_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
-                   context->multiplexerChannels, muxChannel);
+        Bela_fprintf(stderr, "MultiplexAnalogIn warning: muxChannel must be between %i and %i, it is %i\n", 0,
+                     context->multiplexerChannels, muxChannel);
         OUT0(0) = 0.0;
     } else {
         OUT0(0) = multiplexerAnalogRead(context, analogPin, muxChannel);
@@ -259,7 +258,7 @@ void MultiplexAnalogIn_Ctor(MultiplexAnalogIn* unit) {
 
     if (!context->multiplexerChannels) {
         belaUGenDisable(unit);
-        rt_fprintf(stderr, "MultiplexAnalogIn Error: the UGen needs BELA Multiplexer Capelet enabled\n");
+        Bela_fprintf(stderr, "MultiplexAnalogIn Error: the UGen needs BELA Multiplexer Capelet enabled\n");
         return;
     }
 
@@ -280,9 +279,9 @@ void MultiplexAnalogIn_Ctor(MultiplexAnalogIn* unit) {
         }
     } else {
         if ((INRATE(0) == calc_FullRate) || (INRATE(1) == calc_FullRate)) {
-            rt_fprintf(stderr,
-                       "MultiplexAnalogIn warning: output rate is control rate, so cannot change analog pin or "
-                       "multiplex channel at audio rate\n");
+            Bela_fprintf(stderr,
+                         "MultiplexAnalogIn warning: output rate is control rate, so cannot change analog pin or "
+                         "multiplex channel at audio rate\n");
         }
         SETCALC(MultiplexAnalogIn_next_kkk);
     }
@@ -296,7 +295,7 @@ static bool updatePin(unsigned int numChannels, unsigned int newPin, int* oldPin
     if (newPin != *oldPin) {
         *oldPin = newPin;
         if (!isValid) {
-            rt_fprintf(stderr, "%s warning: pin must be 0 <= pin <= %i, it is %i\n", label, numChannels - 1, newPin);
+            Bela_fprintf(stderr, "%s warning: pin must be 0 <= pin <= %i, it is %i\n", label, numChannels - 1, newPin);
         }
     }
     return isValid;
@@ -359,7 +358,7 @@ void AnalogIn_Ctor(AnalogIn* unit) {
 
     if (!context->analogInChannels) {
         belaUGenDisable(unit);
-        rt_fprintf(stderr, "AnalogIn Error: the UGen needs BELA analog inputs enabled\n");
+        Bela_fprintf(stderr, "AnalogIn Error: the UGen needs BELA analog inputs enabled\n");
         return;
     }
 
@@ -374,8 +373,8 @@ void AnalogIn_Ctor(AnalogIn* unit) {
         }
     } else {
         if (INRATE(0) == calc_FullRate) {
-            rt_fprintf(stderr,
-                       "AnalogIn warning: output rate is control rate, so cannot change analog pin at audio rate\n");
+            Bela_fprintf(stderr,
+                         "AnalogIn warning: output rate is control rate, so cannot change analog pin at audio rate\n");
         }
         SETCALC(AnalogIn_next_kk);
     }
@@ -449,7 +448,7 @@ void AnalogOut_Ctor(AnalogOut* unit) {
 
     if (!context->analogOutChannels) {
         belaUGenDisable(unit);
-        rt_fprintf(stderr, "AnalogOut Error: the UGen needs BELA analog outputs enabled\n");
+        Bela_fprintf(stderr, "AnalogOut Error: the UGen needs BELA analog outputs enabled\n");
         return;
     }
 
@@ -466,7 +465,7 @@ void AnalogOut_Ctor(AnalogOut* unit) {
             if (INRATE(1) == calc_FullRate) { // output changed at audio rate
                 SETCALC(AnalogOut_next_aka);
             } else { // analog output only changes at control rate anyways
-                rt_fprintf(
+                Bela_fprintf(
                     stderr,
                     "AnalogOut warning: inputs are control rate, so AnalogOut is also running at control rate\n");
                 SETCALC(AnalogOut_next_kk);
@@ -474,8 +473,8 @@ void AnalogOut_Ctor(AnalogOut* unit) {
         }
     } else { // ugen at control rate
         if ((INRATE(0) == calc_FullRate) || (INRATE(1) == calc_FullRate)) {
-            rt_fprintf(stderr,
-                       "AnalogOut warning: output rate is control rate, so cannot change inputs at audio rate\n");
+            Bela_fprintf(stderr,
+                         "AnalogOut warning: output rate is control rate, so cannot change inputs at audio rate\n");
         }
         SETCALC(AnalogOut_next_kk);
     }
@@ -507,8 +506,8 @@ void DigitalIn_Ctor(DigitalIn* unit) {
 
     unit->mDigitalPin = static_cast<int>(IN0(0)); // digital in pin -- cannot change after construction
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalIn error: digital pin must be between %i and %i, it is %i\n", 0,
-                   context->digitalChannels, unit->mDigitalPin);
+        Bela_fprintf(stderr, "DigitalIn error: digital pin must be between %i and %i, it is %i\n", 0,
+                     context->digitalChannels, unit->mDigitalPin);
         belaUGenDisable(unit);
         return;
     }
@@ -573,8 +572,8 @@ void DigitalOut_Ctor(DigitalOut* unit) {
     unit->mLastOut = 0;
 
     if ((unit->mDigitalPin < 0) || (unit->mDigitalPin >= context->digitalChannels)) {
-        rt_fprintf(stderr, "DigitalOut error: digital pin must be between %i and %i, it is %i\n", 0,
-                   context->digitalChannels, unit->mDigitalPin);
+        Bela_fprintf(stderr, "DigitalOut error: digital pin must be between %i and %i, it is %i\n", 0,
+                     context->digitalChannels, unit->mDigitalPin);
         belaUGenDisable(unit);
     }
     // initialize first buffer
@@ -585,13 +584,14 @@ void DigitalOut_Ctor(DigitalOut* unit) {
         if (INRATE(1) == calc_FullRate) { // output changed at audio rate
             SETCALC(DigitalOut_next_a);
         } else { // not much reason to actually do audiorate output
-            rt_fprintf(stderr, "DigitalOut warning: inputs are control rate, so DigitalOut will run at control rate\n");
+            Bela_fprintf(stderr,
+                         "DigitalOut warning: inputs are control rate, so DigitalOut will run at control rate\n");
             SETCALC(DigitalOut_next_k);
         }
     } else { // ugen at control rate
         if (INRATE(1) == calc_FullRate) {
-            rt_fprintf(stderr,
-                       "DigitalOut warning: UGen rate is control rate, so cannot change inputs at audio rate\n");
+            Bela_fprintf(stderr,
+                         "DigitalOut warning: UGen rate is control rate, so cannot change inputs at audio rate\n");
         }
         SETCALC(DigitalOut_next_k);
     }
@@ -697,7 +697,7 @@ void BelaScopeOut_next(BelaScopeOut* unit, unsigned int numSamples) {
 void BelaScopeOut_Ctor(BelaScopeOut* unit) {
     BelaScope* scope = unit->mWorld->mBelaScope;
     if (!scope || !scope->buffer) {
-        rt_fprintf(stderr, "BelaScopeOut error: Scope not initialized on server\n");
+        Bela_fprintf(stderr, "BelaScopeOut error: Scope not initialized on server\n");
         belaUGenDisable(unit);
         return;
     };
@@ -707,7 +707,7 @@ void BelaScopeOut_Ctor(BelaScopeOut* unit) {
     uint32 maxScopeChannels = unit->mWorld->mBelaMaxScopeChannels;
     uint32 numInputSignals = unit->mNumInputs - 1;
     if (numInputSignals > maxScopeChannels - unit->offset) {
-        rt_fprintf(
+        Bela_fprintf(
             stderr,
             "BelaScopeOut warning: can't scope %i channels starting from %i, maxBelaScopeChannels is set to %i\n",
             numInputSignals, offset, maxScopeChannels);

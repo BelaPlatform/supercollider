@@ -25,14 +25,17 @@
 #include <mutex>
 #include <thread>
 
-#ifdef __COBALT__
-#    include <XenomaiLock.h>
-using SC_Lock = XenomaiMutex;
-using condition_variable_any = XenomaiConditionVariable;
-#else // __COBALT__
+#ifdef SC_BELA
+// only for server stuff
+#    define SC_CONDITION_VARIABLE_ANY_SHOULD_LOCK_BEFORE_NOTIFY // See:
+                                                                // https://www.xenomai.org/pipermail/xenomai/2017-October/037759.html
+#    include <RtLock.h> // from Bela
+using SC_Lock = RtMutex;
+using condition_variable_any = RtConditionVariable;
+#else
 using SC_Lock = std::mutex;
 using condition_variable_any = std::condition_variable_any;
-#endif // __COBALT__
+#endif
 
 using SC_Thread = std::thread;
 using std::cv_status;
